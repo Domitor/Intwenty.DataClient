@@ -7,7 +7,36 @@ Intwenty.DataClient is a lightning fast database client library with a limited s
 ## Supported Databases
 Intwenty.DataClient is built as a wrapper around popular client libraries for MS SQLServer, MariaDb, Sqlite and Postgres. 
 
-## Examples
+## Example
+
+    [DbTablePrimaryKey("Id")]
+    public class Person {
+        [AutoIncrement]
+        public int Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+    }
+    
+    var client = new Connection(DBMS.MariaDb, "MyConnectionString");
+    client.Open();
+    client.CreateTable<Person>();
+    
+    //Insert some rows
+    for (int i = 0; i < 5000; i++)
+         client.InsertEntity(new Person() { FirstName = "Donald", LastName = "Duck"  });
+         
+     //Get a list of person objects
+     var persons = client.GetEntities<Person>();
+     
+     //Get a filtered list of person objects
+     var persons = client.GetEntities<Person>("select * from person where id>@P1", new IIntwentySqlParameter[] {new IntwentySqlParameter("@P1", 1000) });
+     
+      //Get persons as a json string
+     var persons = client.GetJSONArry("select * from person");
+  
+    client.Close();
+    
+    
 
 ## The IDataClient interface
 
