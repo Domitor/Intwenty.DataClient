@@ -453,6 +453,8 @@ namespace Intwenty.DataClient.Databases
 
                     var reader = command.ExecuteReader();
 
+                    TypeDataHandler.AdjustColumnDefinitionToQueryResult(info, reader);
+
                     while (reader.Read())
                     {
                         foreach (var col in info.Columns.Where(p => !p.IsIgnore).OrderBy(p => p.Index))
@@ -493,6 +495,8 @@ namespace Intwenty.DataClient.Databases
                     command.CommandType = CommandType.Text;
 
                     var reader = command.ExecuteReader();
+
+                    TypeDataHandler.AdjustColumnDefinitionToQueryResult(info, reader);
 
                     while (reader.Read())
                     {
