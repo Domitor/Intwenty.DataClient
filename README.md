@@ -1,3 +1,5 @@
+![alt text](https://github.com/Domitor/Intwenty/blob/master/IntwentyDemo/wwwroot/images/intwenty_loggo_small.png)
+
 # Intwenty.DataClient
 A .net core database client library that includes ORM functions, JSON support and more.
 
