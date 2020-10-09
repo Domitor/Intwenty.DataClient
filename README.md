@@ -4,8 +4,19 @@ A .net core database client library that includes ORM functions, JSON support an
 ## Description
 Intwenty.DataClient is a lightning fast database client library with a limited set of functions for object relational mapping and generation JSON directly from SQL query results. 
 
+## Implementation
+Instead of extending the IDbConnection Intwenty.DataClient wraps around other libraries that implements IDbConnection and IDbCommand. It can be seen as a generic abstraction layer that allows users to switch database without much concern of sql flavour. For all methods that return data the DataReader of the underlying library is used internally.
+
+### Included libraries
+* MySqlConnector
+* NpgSql
+* System.Data.SqlClient
+* System.Data.SQLite.Core
+
 ## Supported Databases
-Intwenty.DataClient is built as a wrapper around popular client libraries for MS SQLServer, MariaDb, Sqlite and Postgres. 
+Intwenty.DataClient is built as a wrapper around popular client libraries for MS SQLServer, MariaDb, Sqlite and Postgres. This means that all ORM functions and other functions that generates sql is guranteed to work in all databases.
+
+
 
 ## Example
 
@@ -66,5 +77,27 @@ Intwenty.DataClient is built as a wrapper around popular client libraries for MS
         int DeleteEntities<T>(IEnumerable<T> entities);
         List<TypeMapItem> GetDbTypeMap();
         List<CommandMapItem> GetDbCommandMap();
+        
+## Annotations
+Intwenty.DataClient uses it own set of annotations to support ORM functions
+
+       [DbTableIndex("IDX_1", false, "Col2")]
+       [DbTablePrimaryKey("Col1")]
+       [DbTableName("MyDbTable")]
+       public class Example 
+       { 
+          public int Col1 { get; set; }
+          public int Col2 { get; set; }
+        
+          [DbColumnName("MyDbColumn")]
+          public string Col3 { get; set; }
+        
+          [NotNull]
+          public int Col4 { get; set; }
+        
+          [Ignore]
+          public int Col5 { get; set; }
+       }
+
 
 
