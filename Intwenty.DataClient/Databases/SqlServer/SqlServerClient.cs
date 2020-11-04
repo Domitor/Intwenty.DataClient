@@ -19,13 +19,7 @@ namespace Intwenty.DataClient.Databases.SqlServer
 
         public override DBMS Database { get { return DBMS.MSSqlServer; } }
 
-        public override void Dispose()
-        {
-            connection = null;
-            transaction = null;
-            IsInTransaction = false;
-
-        }
+       
 
         public override void Open()
         {
@@ -35,9 +29,14 @@ namespace Intwenty.DataClient.Databases.SqlServer
         public override void Close()
         {
             if (connection != null && connection.State != ConnectionState.Closed)
+            {
                 connection.Close();
+            }
 
-            Dispose();
+            connection = null;
+            transaction = null;
+            IsInTransaction = false;
+
         }
 
         private SqlConnection GetConnection()

@@ -20,12 +20,18 @@ namespace Intwenty.DataClient.Databases.SQLite
 
         public override DBMS Database { get { return DBMS.SQLite; } }
 
-        public override void Dispose()
+     
+        public override void Close()
         {
-            transaction = null;
+            if (connection != null && connection.State != ConnectionState.Closed)
+            {
+                connection.Close();
+            }
+
             connection = null;
+            transaction = null;
             IsInTransaction = false;
-             
+
         }
 
         private SQLiteConnection GetConnection()
@@ -115,12 +121,6 @@ namespace Intwenty.DataClient.Databases.SQLite
             
         }
 
-        public override void Close()
-        {
-            if (connection!= null && connection.State != ConnectionState.Closed)
-                connection.Close();
-
-            Dispose();
-        }
+      
     }
 }

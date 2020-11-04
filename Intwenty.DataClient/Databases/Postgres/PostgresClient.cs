@@ -19,13 +19,6 @@ namespace Intwenty.DataClient.Databases.Postgres
 
         public override DBMS Database { get { return DBMS.PostgreSQL; } }
 
-        public override void Dispose()
-        {
-            connection = null;
-            transaction = null;
-            IsInTransaction = false;
-
-        }
 
         public override void Open()
         {
@@ -37,8 +30,11 @@ namespace Intwenty.DataClient.Databases.Postgres
             if (connection != null && connection.State != ConnectionState.Closed)
             {
                 connection.Close();
-                Dispose();
             }
+
+            connection = null;
+            transaction = null;
+            IsInTransaction = false;
         }
 
         private NpgsqlConnection GetConnection()

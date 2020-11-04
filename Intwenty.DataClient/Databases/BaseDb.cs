@@ -9,7 +9,7 @@ using System.Text.Json;
 
 namespace Intwenty.DataClient.Databases
 {
-    abstract class BaseDb : IDisposable, IDataClient
+    abstract class BaseDb : IDataClient
     {
         protected string ConnectionString { get; set; }
 
@@ -21,7 +21,6 @@ namespace Intwenty.DataClient.Databases
         {
             ConnectionString = connectionstring;
         }
-        public abstract void Dispose();
         public abstract void Open();
         public abstract void Close();
         protected abstract BaseSqlBuilder GetSqlBuilder();
@@ -87,7 +86,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
         }
@@ -114,7 +113,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
 
@@ -170,7 +169,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
 
@@ -239,7 +238,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
 
@@ -302,7 +301,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
 
@@ -337,7 +336,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
 
@@ -373,7 +372,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
         }
@@ -400,7 +399,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch
             {
-                Dispose();
+                Close();
             }
 
             return false;
@@ -417,7 +416,10 @@ namespace Intwenty.DataClient.Databases
 
                 return true;
             }
-            catch { Dispose();  }
+            catch 
+            { 
+                Close();  
+            }
 
             return false;
         }
@@ -475,7 +477,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
 
@@ -519,7 +521,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
 
@@ -568,7 +570,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
 
@@ -602,7 +604,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
 
@@ -647,7 +649,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
 
@@ -698,7 +700,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Dispose();
+                Close();
                 throw ex;
             }
 
