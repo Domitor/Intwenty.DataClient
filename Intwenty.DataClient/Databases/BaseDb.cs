@@ -49,7 +49,6 @@ namespace Intwenty.DataClient.Databases
             {
                 IsInTransaction = false;
                 transaction.Commit();
-                Close();
             }
            
         }
@@ -61,7 +60,6 @@ namespace Intwenty.DataClient.Databases
             {
                 IsInTransaction = false;
                 transaction.Rollback();
-                Close();
             }
         }
 
@@ -86,7 +84,6 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
         }
@@ -113,7 +110,6 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
 
@@ -169,7 +165,6 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
 
@@ -238,7 +233,6 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
 
@@ -301,7 +295,6 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
 
@@ -336,7 +329,6 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
 
@@ -372,7 +364,6 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
         }
@@ -399,7 +390,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch
             {
-                Close();
+               
             }
 
             return false;
@@ -418,7 +409,7 @@ namespace Intwenty.DataClient.Databases
             }
             catch 
             { 
-                Close();  
+                
             }
 
             return false;
@@ -477,7 +468,6 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
 
@@ -521,7 +511,6 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
 
@@ -570,7 +559,6 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
 
@@ -599,12 +587,9 @@ namespace Intwenty.DataClient.Databases
 
                 }
 
-              
-
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
 
@@ -649,7 +634,6 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
 
@@ -700,7 +684,6 @@ namespace Intwenty.DataClient.Databases
             }
             catch (Exception ex)
             {
-                Close();
                 throw ex;
             }
 
