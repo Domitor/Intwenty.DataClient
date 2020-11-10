@@ -519,8 +519,12 @@ namespace Intwenty.DataClient.Databases
 
         public virtual List<T> GetEntities<T>(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null) where T : new()
         {
+            var key = sql.ToUpper().Replace(" ", "");
+            if (key.Length > 100)
+                key = key.Substring(0, 100);
+
             var res = new List<T>();
-            var info = TypeDataHandler.GetDbTableDefinition<T>(sql);
+            var info = TypeDataHandler.GetDbTableDefinition<T>(key);
 
             try
             {
@@ -696,18 +700,27 @@ namespace Intwenty.DataClient.Databases
 
         protected virtual void SetPropertyValues<T>(IDataReader reader, IntwentyDbColumnDefinition column, T instance)
         {
-            if (column.Property.PropertyType.ToString().ToUpper() == "SYSTEM.INT32")
+
+            if (column.IsInt32)
                 column.Property.SetValue(instance, reader.GetInt32(column.Index), null);
-            else if (column.Property.PropertyType.ToString().ToUpper() == "SYSTEM.BOOLEAN")
+            else if (column.IsBoolean)
                 column.Property.SetValue(instance, reader.GetBoolean(column.Index), null);
-            else if (column.Property.PropertyType.ToString().ToUpper() == "SYSTEM.DECIMAL")
+            else if (column.IsDecimal)
                 column.Property.SetValue(instance, reader.GetDecimal(column.Index), null);
-            else if (column.Property.PropertyType.ToString().ToUpper() == "SYSTEM.SINGLE")
+            else if (column.IsSingle)
                 column.Property.SetValue(instance, reader.GetFloat(column.Index), null);
-            else if (column.Property.PropertyType.ToString().ToUpper() == "SYSTEM.DOUBLE")
+            else if (column.IsDouble)
                 column.Property.SetValue(instance, reader.GetDouble(column.Index), null);
+            else if (column.IsDateTime)
+                column.Property.SetValue(instance, reader.GetDateTime(column.Index), null);
+            else if (column.IsDateTimeOffset)
+                column.Property.SetValue(instance, new DateTimeOffset(reader.GetDateTime(column.Index)), null);
+            else if (column.IsString)
+                column.Property.SetValue(instance, reader.GetString(column.Index), null);
             else
+            {
                 column.Property.SetValue(instance, reader.GetValue(column.Index), null);
+            }
         }
 
         protected abstract void AddCommandParameters(IIntwentySqlParameter[] parameters, IDbCommand command);

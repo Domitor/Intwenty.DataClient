@@ -93,7 +93,6 @@ namespace Intwenty.DataClient.Databases.MariaDb
         }
 
 
-
         protected override void InferAutoIncrementalValue<T>(IntwentyDbTableDefinition model, List<IntwentySqlParameter> parameters, T entity, IDbCommand command)
         {
             var autoinccol = model.Columns.Find(p => p.IsAutoIncremental);

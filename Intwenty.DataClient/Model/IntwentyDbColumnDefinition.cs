@@ -22,8 +22,6 @@ namespace Intwenty.DataClient.Model
 
         public bool IsInQueryResult { get; set; }
 
-        public bool IsJSONStorage { get; set; }
-
         public string GetNetType()
         {
             if (Property == null)
@@ -40,6 +38,22 @@ namespace Intwenty.DataClient.Model
 
             return typestring.ToUpper();
         }
+
+        public bool IsSingle{ get; set; }
+
+        public bool IsInt32 { get; set; }
+
+        public bool IsDecimal { get; set; }
+
+        public bool IsString { get; set; }
+
+        public bool IsDateTime { get; set; }
+
+        public bool IsBoolean { get; set; }
+
+        public bool IsDouble{ get; set; }
+
+        public bool IsDateTimeOffset { get; set; }
 
     }
 }

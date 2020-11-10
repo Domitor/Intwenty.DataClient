@@ -11,8 +11,9 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Domitor/Intwenty.DataClient</RepositoryUrl>
     <PackageIcon>intwenty_loggo_small.png</PackageIcon>
-    <Version>1.0.4</Version>
-    <PackageReleaseNotes>- Bugfix, should not close connection on error</PackageReleaseNotes>
+    <Version>1.0.5</Version>
+    <PackageReleaseNotes>- Bugfix
+- Improved performance</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

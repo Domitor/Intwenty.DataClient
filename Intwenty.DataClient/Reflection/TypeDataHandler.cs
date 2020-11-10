@@ -8,12 +8,12 @@ namespace Intwenty.DataClient.Reflection
 
     static class TypeDataHandler
     {
-        private static string CACHETYPE = "TYPES";
+
 
         public static IntwentyDbTableDefinition GetDbTableDefinition<T>(string key)
         {
             var currenttype = typeof(T);
-            var compositekey = currenttype.Name.ToUpper() + "_" + key.Replace(" ", "").ToUpper();
+            var compositekey = (currenttype.Name + "_" + key).ToUpper();
             return GetTableInfoByTypeAndUsageInternal<T>(compositekey, currenttype);
         }
 
@@ -56,18 +56,14 @@ namespace Intwenty.DataClient.Reflection
         private static IntwentyDbTableDefinition GetTableInfoByTypeAndUsageInternal<T>(string key, Type currenttype)
         {
 
-   
-            var cachekey = CACHETYPE + "_" + key;
+
             var cache = MemoryCache.Default;
 
 
-            IntwentyDbTableDefinition result = cache.Get(cachekey) as IntwentyDbTableDefinition;
+            IntwentyDbTableDefinition result = cache.Get(key) as IntwentyDbTableDefinition;
             if (result != null)
             {
-                if (result.Name.ToUpper() == currenttype.Name.ToUpper())
-                    return result;
-
-                cache.Remove(cachekey);
+                 return result;
             }
 
             result = new IntwentyDbTableDefinition() { Id = key, Name = currenttype.Name };
@@ -133,6 +129,25 @@ namespace Intwenty.DataClient.Reflection
                     }
                 }
 
+                var typestring = property.PropertyType.FullName;
+
+                if (typestring.ToUpper() == "SYSTEM.INT32" || (typestring.ToUpper().Contains("NULLABLE") && typestring.ToUpper().Contains("SYSTEM.INT32")))
+                    column.IsInt32 = true;
+                else if (typestring.ToUpper() == "SYSTEM.BOOLEAN" || (typestring.ToUpper().Contains("NULLABLE") && typestring.ToUpper().Contains("SYSTEM.BOOLEAN")))
+                    column.IsBoolean = true;
+                else if (typestring.ToUpper() == "SYSTEM.DECIMAL" || (typestring.ToUpper().Contains("NULLABLE") && typestring.ToUpper().Contains("SYSTEM.DECIMAL")))
+                    column.IsDecimal = true;
+                else if (typestring.ToUpper() == "SYSTEM.SINGLE" || (typestring.ToUpper().Contains("NULLABLE") && typestring.ToUpper().Contains("SYSTEM.SINGLE")))
+                    column.IsSingle = true;
+                else if (typestring.ToUpper() == "SYSTEM.DOUBLE" || (typestring.ToUpper().Contains("NULLABLE") && typestring.ToUpper().Contains("SYSTEM.DOUBLE")))
+                    column.IsDouble = true;
+                else if (typestring.ToUpper() == "SYSTEM.DATETIME" || (typestring.ToUpper().Contains("NULLABLE") && typestring.ToUpper().Contains("SYSTEM.DATETIME") && !typestring.ToUpper().Contains("SYSTEM.DATETIMEOFFSET")))
+                    column.IsDateTime = true;
+                else if (typestring.ToUpper() == "SYSTEM.DATETIMEOFFSET" || (typestring.ToUpper().Contains("NULLABLE") && typestring.ToUpper().Contains("SYSTEM.DATETIMEOFFSET")))
+                    column.IsDateTimeOffset = true;
+                else if (typestring.ToUpper() == "SYSTEM.STRING")
+                    column.IsString = true;
+
                 if (!column.IsIgnore)
                     order += 1;
 
@@ -142,7 +157,7 @@ namespace Intwenty.DataClient.Reflection
 
             }
 
-            cache.Add(cachekey, result, DateTime.Now.AddYears(1));
+            cache.Add(key, result, DateTime.Now.AddYears(1));
 
             return result;
 

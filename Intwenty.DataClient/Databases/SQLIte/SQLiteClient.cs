@@ -68,19 +68,7 @@ namespace Intwenty.DataClient.Databases.SQLite
 
      
 
-        protected override void SetPropertyValues<T>(IDataReader reader, IntwentyDbColumnDefinition column, T instance)
-        {
-            if (column.Property.PropertyType.FullName.ToUpper().Contains("SYSTEM.DATETIMEOFFSET"))
-            {
-                column.Property.SetValue(instance, new DateTimeOffset(reader.GetDateTime(column.Index)), null);
-            }
-            else
-            {
-                base.SetPropertyValues(reader, column, instance);
-            }
-        }
-
-      
+    
 
         protected override void AddCommandParameters(IIntwentySqlParameter[] parameters, IDbCommand command)
         {

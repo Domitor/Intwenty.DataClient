@@ -94,18 +94,18 @@ namespace Intwenty.DataClient.Databases.SqlServer
 
         protected override void SetPropertyValues<T>(IDataReader reader, IntwentyDbColumnDefinition column, T instance)
         {
-            if (column.Property.PropertyType.ToString().ToUpper() == "SYSTEM.INT32")
+            if (column.IsInt32)
                 column.Property.SetValue(instance, reader.GetInt32(column.Index), null);
-            else if (column.Property.PropertyType.ToString().ToUpper() == "SYSTEM.BOOLEAN")
+            else if (column.IsBoolean)
                 column.Property.SetValue(instance, Convert.ToBoolean(reader.GetInt32(column.Index)), null);
-            else if (column.Property.PropertyType.ToString().ToUpper() == "SYSTEM.DECIMAL")
+            else if (column.IsDecimal)
                 column.Property.SetValue(instance, Convert.ToDecimal(reader.GetValue(column.Index)), null);
-            else if (column.Property.PropertyType.ToString().ToUpper() == "SYSTEM.SINGLE")
+            else if (column.IsSingle)
                 column.Property.SetValue(instance, Convert.ToSingle(reader.GetValue(column.Index)), null);
-            else if (column.Property.PropertyType.ToString().ToUpper() == "SYSTEM.DOUBLE")
+            else if (column.IsDouble)
                 column.Property.SetValue(instance, Convert.ToDouble(reader.GetValue(column.Index)), null);
             else
-                column.Property.SetValue(instance, reader.GetValue(column.Index), null);
+                base.SetPropertyValues(reader, column, instance);
 
           
         }
