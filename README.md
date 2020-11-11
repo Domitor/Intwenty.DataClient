@@ -7,7 +7,7 @@ A .net core database client library that includes ORM functions, JSON support an
 Intwenty.DataClient is a laser fast database client library with a limited set of functions for object relational mapping and generating JSON directly from SQL query results. 
 
 ## Implementation
-Instead of extending the IDbConnection Intwenty.DataClient wraps around other libraries that implements IDbConnection and IDbCommand. It can be seen as a generic abstraction layer that allows users to switch database without much concern of sql flavour. For all methods that return data the DataReader of the underlying library is used internally.
+Instead of extending the IDbConnection Intwenty.DataClient wraps around other libraries that implements IDbConnection and IDbCommand. It works as a generic abstraction layer that allows users to switch database without much concern of sql flavour. For all methods that return data the DataReader of the underlying library is used internally.
 
 ### Included libraries
 * MySqlConnector
