@@ -71,7 +71,7 @@ namespace Intwenty.DataClient.Databases.Postgres
             if (!string.IsNullOrEmpty(result))
             {
 
-                foreach (var col in model.Columns.Where(p => !p.IsIgnore).OrderBy(p => p.Index))
+                foreach (var col in model.Columns.OrderBy(p => p.Index))
                 {
                     if (col.IsAutoIncremental)
                         continue;
@@ -96,7 +96,7 @@ namespace Intwenty.DataClient.Databases.Postgres
             var query = new StringBuilder(string.Format("INSERT INTO {0} (", model.Name));
             var values = new StringBuilder(" VALUES (");
 
-            foreach (var col in model.Columns.Where(p => !p.IsIgnore).OrderBy(p => p.Index))
+            foreach (var col in model.Columns.OrderBy(p => p.Index))
             {
                 if (col.IsAutoIncremental)
                     continue;

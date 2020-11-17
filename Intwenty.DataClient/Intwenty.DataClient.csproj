@@ -11,9 +11,8 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Domitor/Intwenty.DataClient</RepositoryUrl>
     <PackageIcon>intwenty_loggo_small.png</PackageIcon>
-    <Version>1.0.5</Version>
-    <PackageReleaseNotes>- Bugfix
-- Improved performance</PackageReleaseNotes>
+    <Version>1.0.6</Version>
+    <PackageReleaseNotes>- Minor improvments</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

@@ -425,6 +425,64 @@ namespace Intwenty.DataClient.Databases
             return GetEntityInternal<T>(id);
         }
 
+        public virtual T GetEntity<T>(string sql, bool isprocedure) where T : new()
+        {
+            return GetEntity<T>(sql, isprocedure, null);
+        }
+
+        public virtual T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
+        {
+            var key = sql.ToUpper().Replace(" ", "");
+            if (key.Length > 100)
+                key = key.Substring(0, 100);
+
+            var res = default(T);
+            var info = TypeDataHandler.GetDbTableDefinition<T>(key);
+
+            try
+            {
+                using (var command = GetCommand())
+                {
+                    command.CommandText = sql;
+                    if (isprocedure)
+                        command.CommandType = CommandType.StoredProcedure;
+                    else
+                        command.CommandType = CommandType.Text;
+
+                    AddCommandParameters(parameters, command);
+
+                    var reader = command.ExecuteReader();
+
+                    TypeDataHandler.AdjustToQueryResult(info, reader);
+
+                    while (reader.Read())
+                    {
+                        var m = new T();
+                        foreach (var col in info.Columns.OrderBy(p => p.Index))
+                        {
+
+                            if (reader.IsDBNull(col.Index))
+                                continue;
+
+                            SetPropertyValues(reader, col, m);
+
+                        }
+                        res = m;
+                        break;
+                    }
+
+                    reader.Close();
+                    reader.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            return res;
+        }
+
         private T GetEntityInternal<T>(object id) where T : new() 
         {
             var res = new T();
@@ -446,11 +504,11 @@ namespace Intwenty.DataClient.Databases
 
                     var reader = command.ExecuteReader();
 
-                    TypeDataHandler.AdjustColumnDefinitionToQueryResult(info, reader);
+                    TypeDataHandler.AdjustToQueryResult(info, reader);
 
                     while (reader.Read())
                     {
-                        foreach (var col in info.Columns.Where(p => !p.IsIgnore).OrderBy(p => p.Index))
+                        foreach (var col in info.Columns.OrderBy(p => p.Index))
                         {
 
                             if (reader.IsDBNull(col.Index))
@@ -488,12 +546,12 @@ namespace Intwenty.DataClient.Databases
 
                     var reader = command.ExecuteReader();
 
-                    TypeDataHandler.AdjustColumnDefinitionToQueryResult(info, reader);
+                    TypeDataHandler.AdjustToQueryResult(info, reader);
 
                     while (reader.Read())
                     {
                         var m = new T();
-                        foreach (var col in info.Columns.Where(p => !p.IsIgnore).OrderBy(p => p.Index))
+                        foreach (var col in info.Columns.OrderBy(p => p.Index))
                         {
 
                             if (reader.IsDBNull(col.Index))
@@ -516,7 +574,10 @@ namespace Intwenty.DataClient.Databases
 
             return res;
         }
-
+        public virtual List<T> GetEntities<T>(string sql, bool isprocedure = false) where T : new() 
+        {
+            return GetEntities<T>(sql, isprocedure, null);
+        }
         public virtual List<T> GetEntities<T>(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null) where T : new()
         {
             var key = sql.ToUpper().Replace(" ", "");
@@ -540,12 +601,12 @@ namespace Intwenty.DataClient.Databases
 
                     var reader = command.ExecuteReader();
 
-                    TypeDataHandler.AdjustColumnDefinitionToQueryResult(info, reader);
+                    TypeDataHandler.AdjustToQueryResult(info, reader);
 
                     while (reader.Read())
                     {
                         var m = new T();
-                        foreach (var col in info.Columns.Where(p => !p.IsIgnore).OrderBy(p => p.Index))
+                        foreach (var col in info.Columns.OrderBy(p => p.Index))
                         {
 
                             if (reader.IsDBNull(col.Index))

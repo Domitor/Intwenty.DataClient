@@ -88,6 +88,16 @@ namespace Intwenty.DataClient
             return InternalClient.GetEntity<T>(id);
         }
 
+        public T GetEntity<T>(string sql, bool isprocedure) where T : new()
+        {
+            return InternalClient.GetEntity<T>(sql, isprocedure);
+        }
+
+        public T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
+        {
+            return InternalClient.GetEntity<T>(sql, isprocedure, parameters);
+        }
+
         public List<T> GetEntities<T>() where T : new()
         {
             return InternalClient.GetEntities<T>();
@@ -96,6 +106,11 @@ namespace Intwenty.DataClient
         public List<T> GetEntities<T>(string sqlcommand, bool isStoredProcedure) where T : new()
         {
             return InternalClient.GetEntities<T>(sqlcommand, isStoredProcedure);
+        }
+
+        public List<T> GetEntities<T>(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null) where T : new()
+        {
+            return InternalClient.GetEntities<T>(sql, isprocedure, parameters);
         }
 
         public int InsertEntity<T>(T model)
@@ -128,10 +143,7 @@ namespace Intwenty.DataClient
             return InternalClient.ColumnExists(tablename, columnname);
         }
 
-        public List<T> GetEntities<T>(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null) where T : new()
-        {
-            return InternalClient.GetEntities<T>(sql,isprocedure,parameters);
-        }
+     
 
         public int UpdateEntity<T>(T entity)
         {

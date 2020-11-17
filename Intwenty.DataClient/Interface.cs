@@ -22,7 +22,10 @@ namespace Intwenty.DataClient
         object GetScalarValue(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         T GetEntity<T>(string id) where T : new();
         T GetEntity<T>(int id) where T : new();
+        T GetEntity<T>(string sql, bool isprocedure) where T : new();
+        T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new();
         List<T> GetEntities<T>() where T : new();
+        List<T> GetEntities<T>(string sql, bool isprocedure = false) where T : new();
         List<T> GetEntities<T>(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters=null) where T : new();
         string GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
         string GetJSONArray(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);

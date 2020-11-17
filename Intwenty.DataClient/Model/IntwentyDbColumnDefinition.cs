@@ -16,8 +16,6 @@ namespace Intwenty.DataClient.Model
 
         public bool IsNullNotAllowed { get; set; }
 
-        public bool IsIgnore { get; set; }
-
         public PropertyInfo Property { get; set; }
 
         public bool IsInQueryResult { get; set; }

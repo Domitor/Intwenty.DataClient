@@ -14,17 +14,17 @@ namespace Intwenty.DataClient.Reflection
         {
             var currenttype = typeof(T);
             var compositekey = (currenttype.Name + "_" + key).ToUpper();
-            return GetTableInfoByTypeAndUsageInternal<T>(compositekey, currenttype);
+            return GetIntwentyDbTableDefinition<T>(compositekey, currenttype);
         }
 
         public static IntwentyDbTableDefinition GetDbTableDefinition<T>()
         {
             var currenttype = typeof(T);
             var key = currenttype.Name.ToUpper();
-            return GetTableInfoByTypeAndUsageInternal<T>(key, currenttype);
+            return GetIntwentyDbTableDefinition<T>(key, currenttype);
         }
 
-        public static void AdjustColumnDefinitionToQueryResult(IntwentyDbTableDefinition t, IDataReader reader)
+        public static void AdjustToQueryResult(IntwentyDbTableDefinition t, IDataReader reader)
         {
             if (reader == null)
                 return;
@@ -53,12 +53,10 @@ namespace Intwenty.DataClient.Reflection
         }
 
 
-        private static IntwentyDbTableDefinition GetTableInfoByTypeAndUsageInternal<T>(string key, Type currenttype)
+        private static IntwentyDbTableDefinition GetIntwentyDbTableDefinition<T>(string key, Type currenttype)
         {
 
-
             var cache = MemoryCache.Default;
-
 
             IntwentyDbTableDefinition result = cache.Get(key) as IntwentyDbTableDefinition;
             if (result != null)
@@ -89,7 +87,7 @@ namespace Intwenty.DataClient.Reflection
                 }
             }
 
-            var order = -1;
+            var colindex = -1;
             var memberproperties = currenttype.GetProperties();
             foreach (var property in memberproperties)
             {
@@ -97,6 +95,13 @@ namespace Intwenty.DataClient.Reflection
                 var columnname = property.GetCustomAttributes(typeof(DbColumnName), false);
                 if (columnname != null && columnname.Length > 0)
                     membername = ((DbColumnName)columnname[0]).Name;
+
+                var ignore = property.GetCustomAttributes(typeof(Ignore), false);
+                if (ignore != null && ignore.Length > 0)
+                    continue;
+
+                if (property.PropertyType.IsArray)
+                    continue;
 
                 var column = new IntwentyDbColumnDefinition() { Id=membername,  Name = membername, Property = property };
 
@@ -108,12 +113,7 @@ namespace Intwenty.DataClient.Reflection
                 if (notnull != null && notnull.Length > 0)
                     column.IsNullNotAllowed = true;
 
-                var ignore = property.GetCustomAttributes(typeof(Ignore), false);
-                if (ignore != null && ignore.Length > 0)
-                    column.IsIgnore = true;
-
-                if (property.PropertyType.IsArray)
-                    column.IsIgnore = true;
+               
 
                 if (result.PrimaryKeyColumnNames.Length == 0 && membername.ToUpper() == "ID")
                 {
@@ -148,11 +148,9 @@ namespace Intwenty.DataClient.Reflection
                 else if (typestring.ToUpper() == "SYSTEM.STRING")
                     column.IsString = true;
 
-                if (!column.IsIgnore)
-                    order += 1;
-
-                column.Index = order;
-                result.Columns.Add(column);
+                 colindex += 1;
+                 column.Index = colindex;
+                 result.Columns.Add(column);
                
 
             }
