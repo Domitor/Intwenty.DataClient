@@ -128,7 +128,7 @@ namespace Intwenty.DataClient
             return InternalClient.InsertEntity(json, tablename);
         }
 
-        public string GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJSonStringResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
             return InternalClient.GetJSONObject(sql,isprocedure,parameters,resultcolumns);
         }
@@ -170,19 +170,19 @@ namespace Intwenty.DataClient
             return InternalClient.DeleteEntities(entities);
         }
 
-        public string GetJSONArray(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJSonStringResult GetJSONArray(ISqlQuery sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
-            return InternalClient.GetJSONArray(sql,minrow,maxrow,isprocedure,parameters,resultcolumns);
+            return InternalClient.GetJSONArray(sql,isprocedure,parameters,resultcolumns);
         }
 
-        public IResultSet GetResultSet(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
-            return InternalClient.GetResultSet(sql, minrow, maxrow, isprocedure, parameters, resultcolumns);
+            return InternalClient.GetResultSet(sql, isprocedure, parameters, resultcolumns);
         }
 
-        public DataTable GetDataTable(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
-            return InternalClient.GetDataTable(sql, minrow, maxrow, isprocedure, parameters, resultcolumns);
+            return InternalClient.GetDataTable(sql,isprocedure, parameters, resultcolumns);
         }
 
         public List<TypeMapItem> GetDbTypeMap()

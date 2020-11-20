@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Text;
 using System.Text.Json;
 
 namespace Intwenty.DataClient
@@ -27,10 +28,10 @@ namespace Intwenty.DataClient
         List<T> GetEntities<T>() where T : new();
         List<T> GetEntities<T>(string sql, bool isprocedure = false) where T : new();
         List<T> GetEntities<T>(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters=null) where T : new();
-        string GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
-        string GetJSONArray(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
-        IResultSet GetResultSet(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
-        DataTable GetDataTable(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
+        IJSonStringResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
+        IJSonStringResult GetJSONArray(ISqlQuery sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
+        IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
+        DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
         int InsertEntity<T>(T entity);
         int InsertEntity(string json, string tablename);
         int InsertEntity(JsonElement json, string tablename);
@@ -93,6 +94,29 @@ namespace Intwenty.DataClient
         DateTime? GetAsDateTime();
         void SetValue(object value);
 
-      
+    }
+
+    public interface IJSonStringResult
+    {
+         bool IsArray { get; }
+
+         int ObjectCount { get;  }
+
+         int LastRecordId { get;  }
+
+         int FirstRecordId { get;  }
+
+         string Data { get; }
+
+    }
+
+    public interface ISqlQuery
+    {
+        bool IncludeExecutionInfo { get; }
+
+        string SqlStatement { get; }
+
+        string NumericIdColumn { get; }
+
     }
 }

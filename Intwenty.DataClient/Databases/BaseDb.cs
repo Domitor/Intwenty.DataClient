@@ -117,8 +117,9 @@ namespace Intwenty.DataClient.Databases
         }
 
 
-        public string GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJSonStringResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
+            var result = new JSonStringResult();
             var sb = new StringBuilder();
 
             try
@@ -140,8 +141,8 @@ namespace Intwenty.DataClient.Databases
 
                     while (reader.Read())
                     {
-                        
-                         var adjusted_columns = AdjustResultColumns(reader, resultcolumns);
+                        result.ObjectCount = 1;
+                        var adjusted_columns = AdjustResultColumns(reader, resultcolumns);
 
                         sb.Append("{");
                         foreach (var rc in adjusted_columns)
@@ -162,24 +163,31 @@ namespace Intwenty.DataClient.Databases
 
                 }
 
+              
+                result.SetData(sb);
+
             }
             catch (Exception ex)
             {
                 throw ex;
             }
 
-            return sb.ToString();
+            return result;
         }
 
-        public string GetJSONArray(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+       
+
+        public IJSonStringResult GetJSONArray(ISqlQuery sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
+            var start = DateTime.Now;
             var sb = new StringBuilder();
+            var result = new JSonStringResult() { IsArray = true };
 
             try
             {
                 using (var command = GetCommand())
                 {
-                    command.CommandText = sql;
+                    command.CommandText = sql.SqlStatement;
                     if (isprocedure)
                         command.CommandType = CommandType.StoredProcedure;
                     else
@@ -200,23 +208,33 @@ namespace Intwenty.DataClient.Databases
                     {
                         valueseparator = ' ';
                         rindex += 1;
-                        if (maxrow > minrow && (minrow > 0 || maxrow > 0))
-                        {
-                            if (rindex <= minrow)
-                                continue;
-                            if (rindex > maxrow)
-                                break;
-                        }
-                      
+
                         if (adjusted_columns.Count == 0)
                             adjusted_columns = AdjustResultColumns(reader, resultcolumns);
 
-
+                        
                         sb.Append(objectseparator + "{");
                         foreach (var rc in adjusted_columns)
                         {
                             if (reader.IsDBNull(rc.Index))
                                 continue;
+
+                            if (sql.IncludeExecutionInfo)
+                            {
+                                if (!string.IsNullOrEmpty(sql.NumericIdColumn))
+                                {
+                                    object recordid = null;
+                                    if (rc.Name.ToLower() == sql.NumericIdColumn.ToLower() && recordid == null)
+                                    {
+                                        recordid = reader.GetValue(rc.Index);
+                                        if (rindex == 1)
+                                        {
+                                            result.FirstRecordId = Convert.ToInt32(recordid);
+                                        }
+                                        result.LastRecordId = Convert.ToInt32(recordid);
+                                    }
+                                }
+                            }
 
                             sb.Append(valueseparator + GetJSONValue(reader, rc));
                             valueseparator = ',';
@@ -228,7 +246,11 @@ namespace Intwenty.DataClient.Databases
 
                     reader.Close();
                     reader.Dispose();
+
+                    result.ObjectCount = rindex;
+                    result.SetData(sb);
                 }
+                result.Duration = DateTime.Now.Subtract(start).TotalMilliseconds;
 
             }
             catch (Exception ex)
@@ -236,10 +258,10 @@ namespace Intwenty.DataClient.Databases
                 throw ex;
             }
 
-            return sb.ToString();
+            return result;
         }
 
-        public IResultSet GetResultSet(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
             var res = new ResultSet();
 
@@ -265,13 +287,7 @@ namespace Intwenty.DataClient.Databases
                     {
 
                         rindex += 1;
-                        if (maxrow > minrow && (minrow > 0 || maxrow > 0))
-                        {
-                            if (rindex <= minrow)
-                                continue;
-                            if (rindex > maxrow)
-                                break;
-                        }
+                       
                         if (adjusted_columns.Count == 0)
                             adjusted_columns = AdjustResultColumns(reader, resultcolumns);
 
@@ -301,7 +317,7 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        public DataTable GetDataTable(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
             var table = new DataTable();
 
