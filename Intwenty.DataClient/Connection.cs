@@ -128,7 +128,7 @@ namespace Intwenty.DataClient
             return InternalClient.InsertEntity(json, tablename);
         }
 
-        public IJSonStringResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJsonObjectResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
             return InternalClient.GetJSONObject(sql,isprocedure,parameters,resultcolumns);
         }
@@ -170,7 +170,7 @@ namespace Intwenty.DataClient
             return InternalClient.DeleteEntities(entities);
         }
 
-        public IJSonStringResult GetJSONArray(ISqlQuery sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJsonArrayResult GetJSONArray(ISqlQuery sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
             return InternalClient.GetJSONArray(sql,isprocedure,parameters,resultcolumns);
         }

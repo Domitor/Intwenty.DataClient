@@ -117,9 +117,9 @@ namespace Intwenty.DataClient.Databases
         }
 
 
-        public IJSonStringResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJsonObjectResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
-            var result = new JSonStringResult();
+            var result = new JsonObjectResult();
             var sb = new StringBuilder();
 
             try
@@ -141,7 +141,6 @@ namespace Intwenty.DataClient.Databases
 
                     while (reader.Read())
                     {
-                        result.ObjectCount = 1;
                         var adjusted_columns = AdjustResultColumns(reader, resultcolumns);
 
                         sb.Append("{");
@@ -164,7 +163,7 @@ namespace Intwenty.DataClient.Databases
                 }
 
               
-                result.SetData(sb);
+                result.SetData(sb.ToString());
 
             }
             catch (Exception ex)
@@ -177,11 +176,11 @@ namespace Intwenty.DataClient.Databases
 
        
 
-        public IJSonStringResult GetJSONArray(ISqlQuery sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJsonArrayResult GetJSONArray(ISqlQuery sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
             var start = DateTime.Now;
-            var sb = new StringBuilder();
-            var result = new JSonStringResult() { IsArray = true };
+            var objectbuilder = new StringBuilder();
+            var result = new JsonArrayResult();
 
             try
             {
@@ -200,10 +199,9 @@ namespace Intwenty.DataClient.Databases
 
                     var adjusted_columns = new List<IntwentyResultColumn>();
                     var rindex = 0;
-                    char objectseparator = ' ';
                     char valueseparator;
 
-                    sb.Append("[");
+
                     while (reader.Read())
                     {
                         valueseparator = ' ';
@@ -212,8 +210,8 @@ namespace Intwenty.DataClient.Databases
                         if (adjusted_columns.Count == 0)
                             adjusted_columns = AdjustResultColumns(reader, resultcolumns);
 
-                        
-                        sb.Append(objectseparator + "{");
+                        objectbuilder.Clear();
+                        objectbuilder.Append("{");
                         foreach (var rc in adjusted_columns)
                         {
                             if (reader.IsDBNull(rc.Index))
@@ -229,26 +227,30 @@ namespace Intwenty.DataClient.Databases
                                         recordid = reader.GetValue(rc.Index);
                                         if (rindex == 1)
                                         {
-                                            result.FirstRecordId = Convert.ToInt32(recordid);
+                                            result.FirstObjectId = Convert.ToInt32(recordid);
                                         }
-                                        result.LastRecordId = Convert.ToInt32(recordid);
+                                        result.LastObjectId = Convert.ToInt32(recordid);
                                     }
                                 }
                             }
 
-                            sb.Append(valueseparator + GetJSONValue(reader, rc));
+                           
+                            objectbuilder.Append(valueseparator + GetJSONValue(reader, rc));
                             valueseparator = ',';
                         }
-                        sb.Append("}");
-                        objectseparator = ',';
+                        objectbuilder.Append("}");
+
+                        var objectresult = new JsonObjectResult() { ObjectId = result.LastObjectId };
+                        objectresult.SetData(objectbuilder.ToString());
+                        result.Objects.Add(objectresult);
+
                     }
-                    sb.Append("]");
 
                     reader.Close();
                     reader.Dispose();
 
                     result.ObjectCount = rindex;
-                    result.SetData(sb);
+
                 }
                 result.Duration = DateTime.Now.Subtract(start).TotalMilliseconds;
 

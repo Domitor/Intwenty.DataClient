@@ -28,8 +28,8 @@ namespace Intwenty.DataClient
         List<T> GetEntities<T>() where T : new();
         List<T> GetEntities<T>(string sql, bool isprocedure = false) where T : new();
         List<T> GetEntities<T>(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters=null) where T : new();
-        IJSonStringResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
-        IJSonStringResult GetJSONArray(ISqlQuery sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
+        IJsonObjectResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
+        IJsonArrayResult GetJSONArray(ISqlQuery sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
         IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
         DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
         int InsertEntity<T>(T entity);
@@ -96,17 +96,27 @@ namespace Intwenty.DataClient
 
     }
 
-    public interface IJSonStringResult
+    public interface IJsonObjectResult
     {
-         bool IsArray { get; }
-
-         int ObjectCount { get;  }
-
-         int LastRecordId { get;  }
-
-         int FirstRecordId { get;  }
+         int ObjectId { get;  }
 
          string Data { get; }
+
+    }
+
+    public interface IJsonArrayResult
+    {
+        int ObjectCount { get; }
+
+        int FirstObjectId { get; }
+
+        int LastObjectId { get; }
+
+        string Data { get; }
+
+        double Duration { get; }
+
+        List<IJsonObjectResult> Objects { get; }
 
     }
 
