@@ -53,6 +53,8 @@ Intwenty.DataClient is built as a wrapper around popular client libraries for MS
 
 ## The IDataClient interface
 
+    public interface IDataClient
+    {
         DBMS Database { get; }
         void Open();
         void Close();
@@ -67,18 +69,26 @@ Intwenty.DataClient is built as a wrapper around popular client libraries for MS
         object GetScalarValue(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         T GetEntity<T>(string id) where T : new();
         T GetEntity<T>(int id) where T : new();
+        T GetEntity<T>(string sql, bool isprocedure) where T : new();
+        T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new();
         List<T> GetEntities<T>() where T : new();
+        List<T> GetEntities<T>(string sql, bool isprocedure = false) where T : new();
         List<T> GetEntities<T>(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters=null) where T : new();
-        string GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
-        string GetJSONArray(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
-        IResultSet GetResultSet(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
-        DataTable GetDataTable(string sql, int minrow = 0, int maxrow = 0, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
+        IJsonObjectResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
+        IJsonArrayResult GetJSONArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
+        IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
+        DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
         int InsertEntity<T>(T entity);
+        int InsertEntity(string json, string tablename);
+        int InsertEntity(JsonElement json, string tablename);
         int UpdateEntity<T>(T entity);
+        int UpdateEntity(string json, string tablename);
+        int UpdateEntity(JsonElement json, string tablename);
         int DeleteEntity<T>(T entity);
         int DeleteEntities<T>(IEnumerable<T> entities);
         List<TypeMapItem> GetDbTypeMap();
         List<CommandMapItem> GetDbCommandMap();
+    }
         
 ## Annotations
 Intwenty.DataClient uses it own set of annotations to support ORM functions
