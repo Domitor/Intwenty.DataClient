@@ -40,11 +40,11 @@ namespace Intwenty.DataClient
             {
                 if (i == 0)
                 {
-                    res.Append(Objects[0].Data);
+                    res.Append(Objects[i].Data);
                 }
                 else
                 {
-                    res.Append(',' + Objects[0].Data);
+                    res.Append(',' + Objects[i].Data);
                 }
             }
             res.Append("]");
