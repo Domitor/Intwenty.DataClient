@@ -13,7 +13,7 @@ namespace Intwenty.DataClient.Databases.SQLite
         private SQLiteConnection connection;
         private SQLiteTransaction transaction;
 
-        public SQLiteClient(string connectionstring) : base(connectionstring)
+        public SQLiteClient(string connectionstring, DataClientOptions options) : base(connectionstring, options)
         {
 
         }

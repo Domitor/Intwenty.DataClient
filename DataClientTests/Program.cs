@@ -12,9 +12,9 @@ namespace DataClientTests
         {
             Console.WriteLine("Running tests...");
 
-            Test1();
-            Test2();
-            Test3();
+            //Test1();
+            //Test2();
+            //Test3();
             Test4();
            
             Console.ReadLine();
@@ -103,7 +103,7 @@ namespace DataClientTests
         {
             try
             {
-                var client = new Connection(DBMS.MariaDB, @"Server=127.0.0.1;Database=IntwentyDb;uid=root;Password=xxxx");
+                var client = new Connection(DBMS.MariaDB, @"Server=127.0.0.1;Database=IntwentyDb;uid=root;Password=thriller", new DataClientOptions() { JsonNullValueHandling = JsonNullValueMode.Include } );
                 client.Open();
 
                 if (client.TableExists("DataClient_PetsTest"))
@@ -141,6 +141,8 @@ namespace DataClientTests
                 t = client.GetEntities<Pets>();
 
                 var jsonarr = client.GetJSONArray("select * from DataClient_PetsTest");
+
+                var resultset = client.GetResultSet("select * from DataClient_PetsTest");
 
                 var json = client.GetJSONObject("select Name, TestValue from DataClient_PetsTest");
 

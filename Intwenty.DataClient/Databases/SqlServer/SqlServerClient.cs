@@ -12,7 +12,7 @@ namespace Intwenty.DataClient.Databases.SqlServer
         private SqlConnection connection;
         private SqlTransaction transaction;
 
-        public SqlServerClient(string connectionstring) : base(connectionstring)
+        public SqlServerClient(string connectionstring, DataClientOptions options) : base(connectionstring, options)
         {
 
         }

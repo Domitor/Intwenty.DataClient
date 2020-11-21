@@ -8,6 +8,8 @@ namespace Intwenty.DataClient
 {
     public enum DBMS { MSSqlServer, MySql, MariaDB, PostgreSQL, SQLite };
 
+
+
     public class Connection : IDataClient
     {
         public DBMS Database { get; }
@@ -21,16 +23,36 @@ namespace Intwenty.DataClient
             Database = database;
             ConnectionString = connectionstring;
 
+            var options = new DataClientOptions() { JsonNullValueHandling = JsonNullValueMode.Exclude };
+
             if (Database == DBMS.SQLite)
-                InternalClient = new Databases.SQLite.SQLiteClient(connectionstring);
+                InternalClient = new Databases.SQLite.SQLiteClient(connectionstring, options);
             if (Database == DBMS.MySql)
-                InternalClient = new Databases.MariaDb.MariaDbClient(connectionstring);
+                InternalClient = new Databases.MariaDb.MariaDbClient(connectionstring, options);
             if (Database == DBMS.MariaDB)
-                InternalClient = new Databases.MariaDb.MariaDbClient(connectionstring);
+                InternalClient = new Databases.MariaDb.MariaDbClient(connectionstring, options);
             if (Database == DBMS.MSSqlServer)
-                InternalClient = new Databases.SqlServer.SqlServerClient(connectionstring);
+                InternalClient = new Databases.SqlServer.SqlServerClient(connectionstring, options);
             if (Database == DBMS.PostgreSQL)
-                InternalClient = new Databases.Postgres.PostgresClient(connectionstring);
+                InternalClient = new Databases.Postgres.PostgresClient(connectionstring, options);
+
+        }
+
+        public Connection(DBMS database, string connectionstring, DataClientOptions options)
+        {
+            Database = database;
+            ConnectionString = connectionstring;
+
+            if (Database == DBMS.SQLite)
+                InternalClient = new Databases.SQLite.SQLiteClient(connectionstring, options);
+            if (Database == DBMS.MySql)
+                InternalClient = new Databases.MariaDb.MariaDbClient(connectionstring, options);
+            if (Database == DBMS.MariaDB)
+                InternalClient = new Databases.MariaDb.MariaDbClient(connectionstring, options);
+            if (Database == DBMS.MSSqlServer)
+                InternalClient = new Databases.SqlServer.SqlServerClient(connectionstring, options);
+            if (Database == DBMS.PostgreSQL)
+                InternalClient = new Databases.Postgres.PostgresClient(connectionstring, options);
 
         }
 
@@ -170,7 +192,7 @@ namespace Intwenty.DataClient
             return InternalClient.DeleteEntities(entities);
         }
 
-        public IJsonArrayResult GetJSONArray(ISqlQuery sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJsonArrayResult GetJSONArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
             return InternalClient.GetJSONArray(sql,isprocedure,parameters,resultcolumns);
         }

@@ -11,54 +11,40 @@ namespace Intwenty.DataClient
 
         public int ObjectCount { get; set; }
 
-        public int FirstObjectId { get; set; }
-
-        public int LastObjectId { get; set; }
-
         public double Duration { get; set; }
 
-        public List<IJsonObjectResult> Objects { get; set; } 
+        public List<IJsonObjectResult> JsonObjects { get; set; } 
 
-        public string Data
+        public string GetJsonString()
         {
-            get
-            {
-                if (Objects == null)
-                    return "[]";
-                if (Objects.Count == 0)
-                    return "[]";
+            
+            if (JsonObjects == null)
+                return "[]";
+            if (JsonObjects.Count == 0)
+                return "[]";
 
-                return GetData().ToString();
-            }
-        }
-
-        private StringBuilder GetData()
-        {
             var res = new StringBuilder();
             res.Append("[");
-            for(var i=0; i < Objects.Count; i++)
+            for (var i = 0; i < JsonObjects.Count; i++)
             {
                 if (i == 0)
                 {
-                    res.Append(Objects[i].Data);
+                    res.Append(JsonObjects[i].GetJsonString());
                 }
                 else
                 {
-                    res.Append(',' + Objects[i].Data);
+                    res.Append(',' + JsonObjects[i].GetJsonString());
                 }
             }
             res.Append("]");
 
-            return res;
+            return res.ToString();
         }
 
         public JsonArrayResult()
         {
-            Objects = new List<IJsonObjectResult>(); 
+            JsonObjects = new List<IJsonObjectResult>(); 
         }
-
-     
-
 
     }
 }

@@ -7,18 +7,16 @@ namespace Intwenty.DataClient
 {
     public class JsonObjectResult : IJsonObjectResult
     {
-        public int ObjectId { get; set; }
+        public List<IResultSetValue> Values { get; set; }
 
-        public string Data 
+        public string GetJsonString() 
         {
-            get 
-            {
-                if (string.IsNullOrEmpty(pStringData))
-                    return "{}";
+            if (string.IsNullOrEmpty(pStringData))
+                return "{}";
 
 
-                return pStringData;
-            }
+            return pStringData;
+            
         }
 
         private string pStringData { get; set; }
@@ -26,6 +24,11 @@ namespace Intwenty.DataClient
         public void SetData(string data)
         {
             pStringData = data;
+        }
+
+        public JsonObjectResult()
+        {
+            Values = new List<IResultSetValue>();
         }
 
     }

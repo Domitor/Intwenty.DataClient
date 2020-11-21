@@ -12,7 +12,7 @@ namespace Intwenty.DataClient.Databases.Postgres
         private NpgsqlConnection connection;
         private NpgsqlTransaction transaction;
 
-        public PostgresClient(string connectionstring) : base(connectionstring)
+        public PostgresClient(string connectionstring, DataClientOptions options) : base(connectionstring, options)
         {
 
         }

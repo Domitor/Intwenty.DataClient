@@ -14,7 +14,7 @@ namespace Intwenty.DataClient.Databases.MariaDb
         private MySqlConnection connection;
         private MySqlTransaction transaction;
 
-        public MariaDbClient(string connectionstring) : base(connectionstring)
+        public MariaDbClient(string connectionstring, DataClientOptions options) : base(connectionstring, options)
         {
 
         }
@@ -24,7 +24,7 @@ namespace Intwenty.DataClient.Databases.MariaDb
 
         public override void Open()
         {
-
+            
         }
 
         public override void Close()

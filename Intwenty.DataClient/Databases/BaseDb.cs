@@ -17,9 +17,12 @@ namespace Intwenty.DataClient.Databases
 
         public abstract DBMS Database { get; }
 
-        public BaseDb(string connectionstring) 
+        protected DataClientOptions Options { get; }
+
+        public BaseDb(string connectionstring, DataClientOptions options) 
         {
             ConnectionString = connectionstring;
+            Options = options;
         }
         public abstract void Open();
         public abstract void Close();
@@ -119,8 +122,7 @@ namespace Intwenty.DataClient.Databases
 
         public IJsonObjectResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
-            var result = new JsonObjectResult();
-            var sb = new StringBuilder();
+            JsonObjectResult result=null;
 
             try
             {
@@ -136,34 +138,20 @@ namespace Intwenty.DataClient.Databases
 
                     var reader = command.ExecuteReader();
 
-                    var separator = "";
-
-
                     while (reader.Read())
                     {
-                        var adjusted_columns = AdjustResultColumns(reader, resultcolumns);
-
-                        sb.Append("{");
-                        foreach (var rc in adjusted_columns)
-                        {
-                            if (reader.IsDBNull(rc.Index))
-                                continue;
-
-                            sb.Append(separator + GetJSONValue(reader, rc));
-                            separator = ",";
-                        }
-                        sb.Append("}");
+                        var columns = GetQueryColumns(reader, resultcolumns);
+                        result = GetJsonObject(reader, columns);
                         break;
                     }
 
                     reader.Close();
                     reader.Dispose();
-                   
 
                 }
 
-              
-                result.SetData(sb.ToString());
+                if (result == null)
+                    result = new JsonObjectResult();
 
             }
             catch (Exception ex)
@@ -176,17 +164,16 @@ namespace Intwenty.DataClient.Databases
 
        
 
-        public IJsonArrayResult GetJSONArray(ISqlQuery sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJsonArrayResult GetJSONArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
             var start = DateTime.Now;
-            var objectbuilder = new StringBuilder();
             var result = new JsonArrayResult();
 
             try
             {
                 using (var command = GetCommand())
                 {
-                    command.CommandText = sql.SqlStatement;
+                    command.CommandText = sql;
                     if (isprocedure)
                         command.CommandType = CommandType.StoredProcedure;
                     else
@@ -197,62 +184,24 @@ namespace Intwenty.DataClient.Databases
                     var reader = command.ExecuteReader();
 
 
-                    var adjusted_columns = new List<IntwentyResultColumn>();
-                    var rindex = 0;
-                    char valueseparator;
-
-
+                    var columns = new List<IntwentyResultColumn>();
                     while (reader.Read())
                     {
-                        valueseparator = ' ';
-                        rindex += 1;
 
-                        if (adjusted_columns.Count == 0)
-                            adjusted_columns = AdjustResultColumns(reader, resultcolumns);
+                        if (columns.Count == 0)
+                            columns = GetQueryColumns(reader, resultcolumns);
 
-                        objectbuilder.Clear();
-                        objectbuilder.Append("{");
-                        foreach (var rc in adjusted_columns)
-                        {
-                            if (reader.IsDBNull(rc.Index))
-                                continue;
-
-                            if (sql.IncludeExecutionInfo)
-                            {
-                                if (!string.IsNullOrEmpty(sql.NumericIdColumn))
-                                {
-                                    object recordid = null;
-                                    if (rc.Name.ToLower() == sql.NumericIdColumn.ToLower() && recordid == null)
-                                    {
-                                        recordid = reader.GetValue(rc.Index);
-                                        if (rindex == 1)
-                                        {
-                                            result.FirstObjectId = Convert.ToInt32(recordid);
-                                        }
-                                        result.LastObjectId = Convert.ToInt32(recordid);
-                                    }
-                                }
-                            }
-
-                           
-                            objectbuilder.Append(valueseparator + GetJSONValue(reader, rc));
-                            valueseparator = ',';
-                        }
-                        objectbuilder.Append("}");
-
-                        var objectresult = new JsonObjectResult() { ObjectId = result.LastObjectId };
-                        objectresult.SetData(objectbuilder.ToString());
-                        result.Objects.Add(objectresult);
+                        var jsonobject = GetJsonObject(reader, columns);
+                        result.JsonObjects.Add(jsonobject);
 
                     }
 
                     reader.Close();
                     reader.Dispose();
 
-                    result.ObjectCount = rindex;
-
                 }
                 result.Duration = DateTime.Now.Subtract(start).TotalMilliseconds;
+                result.ObjectCount = result.JsonObjects.Count;
 
             }
             catch (Exception ex)
@@ -282,7 +231,7 @@ namespace Intwenty.DataClient.Databases
                     var reader = command.ExecuteReader();
 
 
-                    var adjusted_columns = new List<IntwentyResultColumn>();
+                    var columns = new List<IntwentyResultColumn>();
                     var rindex = 0;
 
                     while (reader.Read())
@@ -290,16 +239,19 @@ namespace Intwenty.DataClient.Databases
 
                         rindex += 1;
                        
-                        if (adjusted_columns.Count == 0)
-                            adjusted_columns = AdjustResultColumns(reader, resultcolumns);
+                        if (columns.Count == 0)
+                            columns = GetQueryColumns(reader, resultcolumns);
 
                         var row = new ResultSetRow();
-                        foreach (var rc in adjusted_columns)
+                        foreach (var rc in columns)
                         {
-                            if (reader.IsDBNull(rc.Index))
+                            if (reader.IsDBNull(rc.Index) && Options.JsonNullValueHandling == JsonNullValueMode.Exclude)
                                 continue;
 
-                            row.SetValue(rc.Name, reader.GetValue(rc.Index));
+                            if (reader.IsDBNull(rc.Index))
+                                row.SetValue(rc.Name, null);
+                            else
+                                row.SetValue(rc.Name, reader.GetValue(rc.Index));
 
                         }
                         res.Rows.Add(row);
@@ -824,6 +776,12 @@ namespace Intwenty.DataClient.Databases
 
         }
 
+        protected string GetJSONNullValue(IntwentyResultColumn resultcol)
+        {
+            return "\"" + resultcol.Name + "\":null";
+
+        }
+
         protected bool IsNumeric(string datatypename, IntwentyResultColumn resultcolumn)
         {
             if (resultcolumn.IsNumeric)
@@ -859,7 +817,7 @@ namespace Intwenty.DataClient.Databases
             return false;
         }
 
-        private List<IntwentyResultColumn> AdjustResultColumns(IDataReader reader, IIntwentyResultColumn[] resultcolumns)
+        private List<IntwentyResultColumn> GetQueryColumns(IDataReader reader, IIntwentyResultColumn[] resultcolumns)
         {
             var res = new List<IntwentyResultColumn>();
 
@@ -893,7 +851,41 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-       
+
+        private JsonObjectResult GetJsonObject(IDataReader openreader, List<IntwentyResultColumn> columns)
+        {
       
+            var result = new JsonObjectResult();
+            var sb = new StringBuilder();
+            var separator = ' ';
+            sb.Append("{");
+            foreach (var rc in columns)
+            {
+                result.Values.Add(new ResultSetValue() { Name = rc.Name, Value = openreader.GetValue(rc.Index) });
+
+                if (openreader.IsDBNull(rc.Index) && Options.JsonNullValueHandling == JsonNullValueMode.Exclude)
+                    continue;
+
+                if (openreader.IsDBNull(rc.Index))
+                {
+                    sb.Append(separator + GetJSONNullValue(rc));
+                }
+                else
+                {
+                    sb.Append(separator + GetJSONValue(openreader, rc));
+                }
+                separator = ',';
+            }
+            sb.Append("}");       
+            result.SetData(sb.ToString());
+            return result;
+
+        }
+
+       
+
+
+
+
     }
 }

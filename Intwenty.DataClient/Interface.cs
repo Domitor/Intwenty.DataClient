@@ -29,7 +29,7 @@ namespace Intwenty.DataClient
         List<T> GetEntities<T>(string sql, bool isprocedure = false) where T : new();
         List<T> GetEntities<T>(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters=null) where T : new();
         IJsonObjectResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
-        IJsonArrayResult GetJSONArray(ISqlQuery sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
+        IJsonArrayResult GetJSONArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
         IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
         DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
         int InsertEntity<T>(T entity);
@@ -98,9 +98,9 @@ namespace Intwenty.DataClient
 
     public interface IJsonObjectResult
     {
-         int ObjectId { get;  }
+        List<IResultSetValue> Values { get;  }
 
-         string Data { get; }
+        string GetJsonString();
 
     }
 
@@ -108,25 +108,13 @@ namespace Intwenty.DataClient
     {
         int ObjectCount { get; }
 
-        int FirstObjectId { get; }
-
-        int LastObjectId { get; }
-
-        string Data { get; }
-
         double Duration { get; }
 
-        List<IJsonObjectResult> Objects { get; }
+        List<IJsonObjectResult> JsonObjects { get; }
+
+        string GetJsonString();
 
     }
 
-    public interface ISqlQuery
-    {
-        bool IncludeExecutionInfo { get; }
-
-        string SqlStatement { get; }
-
-        string NumericIdColumn { get; }
-
-    }
+   
 }
