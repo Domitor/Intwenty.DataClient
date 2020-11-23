@@ -3,6 +3,7 @@ using Intwenty.DataClient.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -69,145 +70,182 @@ namespace Intwenty.DataClient.Databases
 
         public void RunCommand(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
-            try
+           
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
-                {
-                    command.CommandText = sql;
-                    if (isprocedure)
-                        command.CommandType = CommandType.StoredProcedure;
-                    else
-                        command.CommandType = CommandType.Text;
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
 
-                    AddCommandParameters(parameters, command);
+                AddCommandParameters(parameters, command);
 
-                    command.ExecuteNonQuery();
+                command.ExecuteNonQuery();
 
-                }
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            
         }
 
         public object GetScalarValue(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             object res;
 
-            try
+
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
-                {
-                    command.CommandText = sql;
-                    if (isprocedure)
-                        command.CommandType = CommandType.StoredProcedure;
-                    else
-                        command.CommandType = CommandType.Text;
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
 
-                    AddCommandParameters(parameters, command);
+                AddCommandParameters(parameters, command);
 
-                    res = command.ExecuteScalar();
-                }
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
+                res = command.ExecuteScalar();
             }
 
+ 
             return res;
         }
 
-
-        public IJsonObjectResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public dynamic GetObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
-            JsonObjectResult result=null;
+            object result = null;
 
-            try
+
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = command.ExecuteReader();
+
+                while (reader.Read())
                 {
-                    command.CommandText = sql;
-                    if (isprocedure)
-                        command.CommandType = CommandType.StoredProcedure;
-                    else
-                        command.CommandType = CommandType.Text;
-
-                    AddCommandParameters(parameters, command);
-
-                    var reader = command.ExecuteReader();
-
-                    while (reader.Read())
-                    {
-                        var columns = GetQueryColumns(reader, resultcolumns);
-                        result = GetJsonObject(reader, columns);
-                        break;
-                    }
-
-                    reader.Close();
-                    reader.Dispose();
-
+                    var columns = GetQueryColumns(reader, resultcolumns);
+                    result = GetObject(reader, columns);
+                    break;
                 }
 
-                if (result == null)
-                    result = new JsonObjectResult();
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
+                reader.Close();
+                reader.Dispose();
             }
 
             return result;
         }
 
-       
+        public IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        {
+            JsonObjectResult result = null;
 
-        public IJsonArrayResult GetJSONArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+            using (var command = GetCommand())
+            {
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    var columns = GetQueryColumns(reader, resultcolumns);
+                    result = GetJsonObjectResult(reader, columns);
+                    break;
+                }
+
+                reader.Close();
+                reader.Dispose();
+
+            }
+
+            if (result == null)
+                result = new JsonObjectResult();
+
+
+            return result;
+        }
+
+        public List<dynamic> GetObjects(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        {
+            var res = new List<dynamic>();
+
+            using (var command = GetCommand())
+            {
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = command.ExecuteReader();
+
+                var columns = new List<IntwentyResultColumn>();
+                while (reader.Read())
+                {
+
+                    if (columns.Count == 0)
+                        columns = GetQueryColumns(reader, resultcolumns);
+
+                    res.Add(GetObject(reader, columns));
+
+                }
+
+                reader.Close();
+                reader.Dispose();
+            }
+
+            return res;
+        }
+
+        public IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
             var start = DateTime.Now;
             var result = new JsonArrayResult();
 
-            try
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = command.ExecuteReader();
+
+
+                var columns = new List<IntwentyResultColumn>();
+                while (reader.Read())
                 {
-                    command.CommandText = sql;
-                    if (isprocedure)
-                        command.CommandType = CommandType.StoredProcedure;
-                    else
-                        command.CommandType = CommandType.Text;
 
-                    AddCommandParameters(parameters, command);
+                    if (columns.Count == 0)
+                        columns = GetQueryColumns(reader, resultcolumns);
 
-                    var reader = command.ExecuteReader();
-
-
-                    var columns = new List<IntwentyResultColumn>();
-                    while (reader.Read())
-                    {
-
-                        if (columns.Count == 0)
-                            columns = GetQueryColumns(reader, resultcolumns);
-
-                        var jsonobject = GetJsonObject(reader, columns);
-                        result.JsonObjects.Add(jsonobject);
-
-                    }
-
-                    reader.Close();
-                    reader.Dispose();
+                    var jsonobject = GetJsonObjectResult(reader, columns);
+                    result.JsonObjects.Add(jsonobject);
 
                 }
-                result.Duration = DateTime.Now.Subtract(start).TotalMilliseconds;
-                result.ObjectCount = result.JsonObjects.Count;
+
+                reader.Close();
+                reader.Dispose();
 
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            result.Duration = DateTime.Now.Subtract(start).TotalMilliseconds;
+            result.ObjectCount = result.JsonObjects.Count;
+
 
             return result;
         }
@@ -216,57 +254,50 @@ namespace Intwenty.DataClient.Databases
         {
             var res = new ResultSet();
 
-            try
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = command.ExecuteReader();
+
+
+                var columns = new List<IntwentyResultColumn>();
+                var rindex = 0;
+
+                while (reader.Read())
                 {
-                    command.CommandText = sql;
-                    if (isprocedure)
-                        command.CommandType = CommandType.StoredProcedure;
-                    else
-                        command.CommandType = CommandType.Text;
 
-                    AddCommandParameters(parameters, command);
+                    rindex += 1;
 
-                    var reader = command.ExecuteReader();
+                    if (columns.Count == 0)
+                        columns = GetQueryColumns(reader, resultcolumns);
 
-
-                    var columns = new List<IntwentyResultColumn>();
-                    var rindex = 0;
-
-                    while (reader.Read())
+                    var row = new ResultSetRow();
+                    foreach (var rc in columns)
                     {
+                        if (reader.IsDBNull(rc.Index) && Options.JsonNullValueHandling == JsonNullValueMode.Exclude)
+                            continue;
 
-                        rindex += 1;
-                       
-                        if (columns.Count == 0)
-                            columns = GetQueryColumns(reader, resultcolumns);
-
-                        var row = new ResultSetRow();
-                        foreach (var rc in columns)
-                        {
-                            if (reader.IsDBNull(rc.Index) && Options.JsonNullValueHandling == JsonNullValueMode.Exclude)
-                                continue;
-
-                            if (reader.IsDBNull(rc.Index))
-                                row.SetValue(rc.Name, null);
-                            else
-                                row.SetValue(rc.Name, reader.GetValue(rc.Index));
-
-                        }
-                        res.Rows.Add(row);
+                        if (reader.IsDBNull(rc.Index))
+                            row.SetValue(rc.Name, null);
+                        else
+                            row.SetValue(rc.Name, reader.GetValue(rc.Index));
 
                     }
+                    res.Rows.Add(row);
 
-                    reader.Close();
-                    reader.Dispose();
                 }
 
+                reader.Close();
+                reader.Dispose();
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+
 
             return res;
         }
@@ -275,31 +306,23 @@ namespace Intwenty.DataClient.Databases
         {
             var table = new DataTable();
 
-            try
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
-                {
-                    command.CommandText = sql;
-                    if (isprocedure)
-                        command.CommandType = CommandType.StoredProcedure;
-                    else
-                        command.CommandType = CommandType.Text;
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
 
-                    AddCommandParameters(parameters, command);
+                AddCommandParameters(parameters, command);
 
-                    var reader = command.ExecuteReader();
+                var reader = command.ExecuteReader();
 
-                    table.Load(reader);
+                table.Load(reader);
 
-                    reader.Close();
-                    reader.Dispose();
+                reader.Close();
+                reader.Dispose();
 
-                }
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
 
             return table;
@@ -312,33 +335,26 @@ namespace Intwenty.DataClient.Databases
             if (TableExists<T>())
                 return;
 
-            try
+            using (var command = GetCommand())
+            {
+                command.CommandText = GetSqlBuilder().GetCreateTableSql(info);
+                command.CommandType = CommandType.Text;
+                command.ExecuteNonQuery();
+            }
+
+            foreach (var index in info.Indexes)
             {
                 using (var command = GetCommand())
                 {
-                    command.CommandText = GetSqlBuilder().GetCreateTableSql(info);
+                    command.CommandText = GetSqlBuilder().GetCreateIndexSql(index);
                     command.CommandType = CommandType.Text;
                     command.ExecuteNonQuery();
                 }
-
-                foreach (var index in info.Indexes)
-                {
-                    using (var command = GetCommand())
-                    {
-                        command.CommandText = GetSqlBuilder().GetCreateIndexSql(index);
-                        command.CommandType = CommandType.Text;
-                        command.ExecuteNonQuery();
-                    }
-                }
-
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+
+          
         }
 
-       
 
         public bool TableExists<T>()
         {
@@ -358,11 +374,8 @@ namespace Intwenty.DataClient.Databases
                 }
                 return true;
             }
-            catch
-            {
-               
-            }
-
+            catch { }
+           
             return false;
         }
 
@@ -371,17 +384,14 @@ namespace Intwenty.DataClient.Databases
             try
             {
                 var checkcommand = GetCommand();
-                checkcommand.CommandText = string.Format("SELECT {0} FROM {1} WHERE 1=2", columnname,tablename);
+                checkcommand.CommandText = string.Format("SELECT {0} FROM {1} WHERE 1=2", columnname, tablename);
                 checkcommand.CommandType = CommandType.Text;
                 checkcommand.ExecuteScalar();
 
                 return true;
             }
-            catch 
-            { 
-                
-            }
-
+            catch { }
+          
             return false;
         }
 
@@ -409,51 +419,44 @@ namespace Intwenty.DataClient.Databases
             var res = default(T);
             var info = TypeDataHandler.GetDbTableDefinition<T>(key);
 
-            try
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = command.ExecuteReader();
+
+                TypeDataHandler.AdjustToQueryResult(info, reader);
+
+                while (reader.Read())
                 {
-                    command.CommandText = sql;
-                    if (isprocedure)
-                        command.CommandType = CommandType.StoredProcedure;
-                    else
-                        command.CommandType = CommandType.Text;
-
-                    AddCommandParameters(parameters, command);
-
-                    var reader = command.ExecuteReader();
-
-                    TypeDataHandler.AdjustToQueryResult(info, reader);
-
-                    while (reader.Read())
+                    var m = new T();
+                    foreach (var col in info.Columns.OrderBy(p => p.Index))
                     {
-                        var m = new T();
-                        foreach (var col in info.Columns.OrderBy(p => p.Index))
-                        {
 
-                            if (reader.IsDBNull(col.Index))
-                                continue;
+                        if (reader.IsDBNull(col.Index))
+                            continue;
 
-                            SetPropertyValues(reader, col, m);
+                        SetPropertyValues(reader, col, m);
 
-                        }
-                        res = m;
-                        break;
                     }
-
-                    reader.Close();
-                    reader.Dispose();
+                    res = m;
+                    break;
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
+
+                reader.Close();
+                reader.Dispose();
             }
 
             return res;
         }
 
-        private T GetEntityInternal<T>(object id) where T : new() 
+        private T GetEntityInternal<T>(object id) where T : new()
         {
             var res = new T();
             var info = TypeDataHandler.GetDbTableDefinition<T>();
@@ -463,40 +466,34 @@ namespace Intwenty.DataClient.Databases
             if (info.PrimaryKeyColumnNamesList.Count > 1)
                 throw new InvalidOperationException(string.Format("The table {0} uses a composite primary key", info.Name));
 
-            try
+
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
+                command.CommandText = string.Format("SELECT * FROM {0} WHERE {1}=@P1", info.Name, info.PrimaryKeyColumnNamesList[0]);
+                command.CommandType = CommandType.Text;
+
+                AddCommandParameters(new IIntwentySqlParameter[] { new IntwentySqlParameter("@P1", id) }, command);
+
+                var reader = command.ExecuteReader();
+
+                TypeDataHandler.AdjustToQueryResult(info, reader);
+
+                while (reader.Read())
                 {
-                    command.CommandText = string.Format("SELECT * FROM {0} WHERE {1}=@P1", info.Name, info.PrimaryKeyColumnNamesList[0]);
-                    command.CommandType = CommandType.Text;
-
-                    AddCommandParameters(new IIntwentySqlParameter[] { new IntwentySqlParameter("@P1", id) }, command);
-
-                    var reader = command.ExecuteReader();
-
-                    TypeDataHandler.AdjustToQueryResult(info, reader);
-
-                    while (reader.Read())
+                    foreach (var col in info.Columns.OrderBy(p => p.Index))
                     {
-                        foreach (var col in info.Columns.OrderBy(p => p.Index))
-                        {
 
-                            if (reader.IsDBNull(col.Index))
-                                continue;
+                        if (reader.IsDBNull(col.Index))
+                            continue;
 
-                            SetPropertyValues(reader, col, res);
-
-                        }
+                        SetPropertyValues(reader, col, res);
 
                     }
 
-                    reader.Close();
-                    reader.Dispose();
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
+
+                reader.Close();
+                reader.Dispose();
             }
 
             return res;
@@ -507,40 +504,34 @@ namespace Intwenty.DataClient.Databases
             var res = new List<T>();
             var info = TypeDataHandler.GetDbTableDefinition<T>();
 
-            try
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
+                command.CommandText = string.Format("SELECT * FROM {0}", info.Name);
+                command.CommandType = CommandType.Text;
+
+                var reader = command.ExecuteReader();
+
+                TypeDataHandler.AdjustToQueryResult(info, reader);
+
+                while (reader.Read())
                 {
-                    command.CommandText = string.Format("SELECT * FROM {0}", info.Name);
-                    command.CommandType = CommandType.Text;
-
-                    var reader = command.ExecuteReader();
-
-                    TypeDataHandler.AdjustToQueryResult(info, reader);
-
-                    while (reader.Read())
+                    var m = new T();
+                    foreach (var col in info.Columns.OrderBy(p => p.Index))
                     {
-                        var m = new T();
-                        foreach (var col in info.Columns.OrderBy(p => p.Index))
-                        {
 
-                            if (reader.IsDBNull(col.Index))
-                                continue;
+                        if (reader.IsDBNull(col.Index))
+                            continue;
 
-                            SetPropertyValues(reader, col, m);
+                        SetPropertyValues(reader, col, m);
 
-                        }
-                        res.Add(m);
                     }
-
-                    reader.Close();
-                    reader.Dispose();
+                    res.Add(m);
                 }
+
+                reader.Close();
+                reader.Dispose();
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+  
 
             return res;
         }
@@ -557,44 +548,37 @@ namespace Intwenty.DataClient.Databases
             var res = new List<T>();
             var info = TypeDataHandler.GetDbTableDefinition<T>(key);
 
-            try
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = command.ExecuteReader();
+
+                TypeDataHandler.AdjustToQueryResult(info, reader);
+
+                while (reader.Read())
                 {
-                    command.CommandText = sql;
-                    if (isprocedure)
-                        command.CommandType = CommandType.StoredProcedure;
-                    else
-                        command.CommandType = CommandType.Text;
-
-                    AddCommandParameters(parameters, command);
-
-                    var reader = command.ExecuteReader();
-
-                    TypeDataHandler.AdjustToQueryResult(info, reader);
-
-                    while (reader.Read())
+                    var m = new T();
+                    foreach (var col in info.Columns.OrderBy(p => p.Index))
                     {
-                        var m = new T();
-                        foreach (var col in info.Columns.OrderBy(p => p.Index))
-                        {
 
-                            if (reader.IsDBNull(col.Index))
-                                continue;
+                        if (reader.IsDBNull(col.Index))
+                            continue;
 
-                            SetPropertyValues(reader, col, m);
+                        SetPropertyValues(reader, col, m);
 
-                        }
-                        res.Add(m);
                     }
-
-                    reader.Close();
-                    reader.Dispose();
+                    res.Add(m);
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
+
+                reader.Close();
+                reader.Dispose();
             }
 
             return res;
@@ -607,29 +591,20 @@ namespace Intwenty.DataClient.Databases
             var parameters = new List<IntwentySqlParameter>();
             int res;
 
-            try
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
-                {
-                    command.CommandText = GetSqlBuilder().GetInsertSql(info, entity, parameters);
-                    command.CommandType = CommandType.Text;
+                command.CommandText = GetSqlBuilder().GetInsertSql(info, entity, parameters);
+                command.CommandType = CommandType.Text;
 
-                    AddCommandParameters(parameters.ToArray(), command);
+                AddCommandParameters(parameters.ToArray(), command);
 
-                    res = command.ExecuteNonQuery();
+                res = command.ExecuteNonQuery();
 
-                    InferAutoIncrementalValue(info, parameters, entity, command);
+                InferAutoIncrementalValue(info, parameters, entity, command);
 
-                }
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
 
             return res;
-
         }
 
         public int InsertEntity(string json, string tablename)
@@ -654,24 +629,17 @@ namespace Intwenty.DataClient.Databases
             if (keyparameters.Count == 0)
                 throw new InvalidOperationException("Can't update a table without 'Primary Key' or an 'Auto Increment' column, please use annotations.");
 
-            try
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
-                {
-                    command.CommandText = sql;
-                    command.CommandType = CommandType.Text;
+                command.CommandText = sql;
+                command.CommandType = CommandType.Text;
 
-                    AddCommandParameters(keyparameters.ToArray(), command);
-                    AddCommandParameters(parameters.ToArray(), command);
+                AddCommandParameters(keyparameters.ToArray(), command);
+                AddCommandParameters(parameters.ToArray(), command);
 
-                    res = command.ExecuteNonQuery();
-                }
+                res = command.ExecuteNonQuery();
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-
+ 
             return res;
         }
 
@@ -705,22 +673,16 @@ namespace Intwenty.DataClient.Databases
             if (parameters.Count == 0)
                 throw new InvalidOperationException("Can't delete rows in a table without 'Primary Key' or an 'Auto Increment' column, please use annotations.");
 
-            try
+            using (var command = GetCommand())
             {
-                using (var command = GetCommand())
-                {
-                    command.CommandText = sql;
-                    command.CommandType = CommandType.Text;
+                command.CommandText = sql;
+                command.CommandType = CommandType.Text;
 
-                    AddCommandParameters(parameters.ToArray(), command);
+                AddCommandParameters(parameters.ToArray(), command);
 
-                    res = command.ExecuteNonQuery();
-                }
+                res = command.ExecuteNonQuery();
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+    
 
             return res;
         }
@@ -852,9 +814,8 @@ namespace Intwenty.DataClient.Databases
         }
 
 
-        private JsonObjectResult GetJsonObject(IDataReader openreader, List<IntwentyResultColumn> columns)
+        private JsonObjectResult GetJsonObjectResult(IDataReader openreader, List<IntwentyResultColumn> columns)
         {
-      
             var result = new JsonObjectResult();
             var sb = new StringBuilder();
             var separator = ' ';
@@ -882,7 +843,31 @@ namespace Intwenty.DataClient.Databases
 
         }
 
-       
+        private dynamic GetObject(IDataReader openreader, List<IntwentyResultColumn> columns)
+        {
+            var result = new ExpandoObject() as IDictionary<string, object>;
+
+            foreach (var rc in columns)
+            {
+
+                if (openreader.IsDBNull(rc.Index) && Options.JsonNullValueHandling == JsonNullValueMode.Exclude)
+                    continue;
+
+                if (openreader.IsDBNull(rc.Index))
+                {
+                    result.Add(rc.Name, openreader.GetValue(rc.Index));
+                }
+                else
+                {
+                    result.Add(rc.Name, null);
+                }
+            }
+
+            return result;
+
+        }
+
+
 
 
 

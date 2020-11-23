@@ -103,7 +103,9 @@ namespace DataClientTests
         {
             try
             {
-                var client = new Connection(DBMS.MariaDB, @"Server=127.0.0.1;Database=IntwentyDb;uid=root;Password=thriller", new DataClientOptions() { JsonNullValueHandling = JsonNullValueMode.Include } );
+                var client = new Connection(DBMS.MariaDB, @"Server=127.0.0.1;Database=IntwentyDb;uid=root;Password=thriller", new DataClientOptions() { JsonNullValueHandling = JsonNullValueMode.Exclude } );
+
+                /*
                 client.Open();
 
                 if (client.TableExists("DataClient_PetsTest"))
@@ -114,10 +116,11 @@ namespace DataClientTests
 
                 client.CreateTable<Pets>();
 
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 100000; i++)
                     client.InsertEntity(new Pets() { Name = "Dog " + i, BirthDate = DateTime.Now, Offset = DateTime.Now, TestValue = 2.34F });
 
                 client.Close();
+          
 
                 client.Open();
 
@@ -133,18 +136,23 @@ namespace DataClientTests
                     client.UpdateEntity(s);
                    
                 }
+                      */
 
-                t = client.GetEntities<Pets>();
+                client.Open();
+
+                var t = client.GetEntities<Pets>();
 
                 t = client.GetEntities<Pets>("select Name from DataClient_PetsTest", false);
 
                 t = client.GetEntities<Pets>();
 
-                var jsonarr = client.GetJSONArray("select * from DataClient_PetsTest");
+                var jsonarr = client.GetJsonArray("select * from DataClient_PetsTest");
+
+                var objlist = client.GetObjects("select * from DataClient_PetsTest");
 
                 var resultset = client.GetResultSet("select * from DataClient_PetsTest");
 
-                var json = client.GetJSONObject("select Name, TestValue from DataClient_PetsTest");
+                var json = client.GetJsonObject("select Name, TestValue from DataClient_PetsTest");
 
                 var typedresult = client.GetEntity<Pets>("select Name, TestValue from DataClient_PetsTest", false);
 

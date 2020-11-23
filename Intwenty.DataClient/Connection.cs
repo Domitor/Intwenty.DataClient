@@ -100,12 +100,28 @@ namespace Intwenty.DataClient
             return InternalClient.TableExists<T>();
         }
 
+
+        public int InsertEntity<T>(T model)
+        {
+            return InternalClient.InsertEntity(model);
+        }
+
+        public int InsertEntity(string json, string tablename)
+        {
+            return InternalClient.InsertEntity(json, tablename);
+        }
+
+        public int InsertEntity(JsonElement json, string tablename)
+        {
+            return InternalClient.InsertEntity(json, tablename);
+        }
+
         public T GetEntity<T>(string id) where T : new()
         {
             return InternalClient.GetEntity<T>(id);
         }
 
-        public T GetEntity<T>(int id) where T : new() 
+        public T GetEntity<T>(int id) where T : new()
         {
             return InternalClient.GetEntity<T>(id);
         }
@@ -135,24 +151,24 @@ namespace Intwenty.DataClient
             return InternalClient.GetEntities<T>(sql, isprocedure, parameters);
         }
 
-        public int InsertEntity<T>(T model)
+        public IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
-            return InternalClient.InsertEntity(model);
+            return InternalClient.GetJsonObject(sql,isprocedure,parameters,resultcolumns);
         }
 
-        public int InsertEntity(string json, string tablename)
+        public dynamic GetObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
-            return InternalClient.InsertEntity(json, tablename);
+            return InternalClient.GetObject(sql, isprocedure, parameters, resultcolumns);
         }
 
-        public int InsertEntity(JsonElement json, string tablename)
+        public IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
-            return InternalClient.InsertEntity(json, tablename);
+            return InternalClient.GetJsonArray(sql, isprocedure, parameters, resultcolumns);
         }
 
-        public IJsonObjectResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public List<dynamic> GetObjects(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
         {
-            return InternalClient.GetJSONObject(sql,isprocedure,parameters,resultcolumns);
+            return InternalClient.GetObjects(sql, isprocedure, parameters, resultcolumns);
         }
 
         public bool TableExists(string tablename)
@@ -164,8 +180,6 @@ namespace Intwenty.DataClient
         {
             return InternalClient.ColumnExists(tablename, columnname);
         }
-
-     
 
         public int UpdateEntity<T>(T entity)
         {
@@ -190,11 +204,6 @@ namespace Intwenty.DataClient
         public int DeleteEntities<T>(IEnumerable<T> entities)
         {
             return InternalClient.DeleteEntities(entities);
-        }
-
-        public IJsonArrayResult GetJSONArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
-        {
-            return InternalClient.GetJSONArray(sql,isprocedure,parameters,resultcolumns);
         }
 
         public IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
