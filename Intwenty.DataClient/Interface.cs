@@ -23,11 +23,11 @@ namespace Intwenty.DataClient
         object GetScalarValue(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         T GetEntity<T>(string id) where T : new();
         T GetEntity<T>(int id) where T : new();
-        T GetEntity<T>(string sql, bool isprocedure=false) where T : new();
-        T GetEntity<T>(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters = null) where T : new();
+        T GetEntity<T>(string sql, bool isprocedure) where T : new();
+        T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new();
         List<T> GetEntities<T>() where T : new();
         List<T> GetEntities<T>(string sql, bool isprocedure=false) where T : new();
-        List<T> GetEntities<T>(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters=null) where T : new();
+        List<T> GetEntities<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters=null) where T : new();
         IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         dynamic GetObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);

@@ -126,12 +126,12 @@ namespace Intwenty.DataClient
             return InternalClient.GetEntity<T>(id);
         }
 
-        public T GetEntity<T>(string sql, bool isprocedure=false) where T : new()
+        public T GetEntity<T>(string sql, bool isprocedure) where T : new()
         {
             return InternalClient.GetEntity<T>(sql, isprocedure);
         }
 
-        public T GetEntity<T>(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters = null) where T : new()
+        public T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
         {
             return InternalClient.GetEntity<T>(sql, isprocedure, parameters);
         }
@@ -146,7 +146,7 @@ namespace Intwenty.DataClient
             return InternalClient.GetEntities<T>(sql, isprocedure);
         }
 
-        public List<T> GetEntities<T>(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null) where T : new()
+        public List<T> GetEntities<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
         {
             return InternalClient.GetEntities<T>(sql, isprocedure, parameters);
         }

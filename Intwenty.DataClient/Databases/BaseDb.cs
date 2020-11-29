@@ -424,12 +424,12 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        public virtual T GetEntity<T>(string sql, bool isprocedure=false) where T : new()
+        public virtual T GetEntity<T>(string sql, bool isprocedure) where T : new()
         {
             return GetEntity<T>(sql, isprocedure, null);
         }
 
-        public virtual T GetEntity<T>(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters = null) where T : new()
+        public virtual T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
         {
 
             var res = new T();
@@ -522,7 +522,7 @@ namespace Intwenty.DataClient.Databases
         {
             return GetEntities<T>(sql, isprocedure, null);
         }
-        public virtual List<T> GetEntities<T>(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null) where T : new()
+        public virtual List<T> GetEntities<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
         {
 
             var res = new List<T>();

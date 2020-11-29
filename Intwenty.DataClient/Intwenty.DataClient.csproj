@@ -11,8 +11,8 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Domitor/Intwenty.DataClient</RepositoryUrl>
     <PackageIcon>intwenty_loggo_small.png</PackageIcon>
-    <Version>1.0.7</Version>
-    <PackageReleaseNotes>- Changed return type for GetJsonObject and GetJsonArray</PackageReleaseNotes>
+    <Version>1.0.8</Version>
+    <PackageReleaseNotes>- IDataClient changes</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

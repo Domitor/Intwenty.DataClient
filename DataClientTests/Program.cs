@@ -103,9 +103,9 @@ namespace DataClientTests
         {
             try
             {
-                var client = new Connection(DBMS.MariaDB, @"Server=127.0.0.1;Database=IntwentyDb;uid=root;Password=thriller", new DataClientOptions() { JsonNullValueHandling = JsonNullValueMode.Exclude } );
+                var client = new Connection(DBMS.PostgreSQL, @"Server=127.0.0.1;Port=5432;Database=IntwentyDb;User Id=postgres;Password=xxxx;", new DataClientOptions() { JsonNullValueHandling = JsonNullValueMode.Exclude } );
 
-                /*
+                
                 client.Open();
 
                 if (client.TableExists("DataClient_PetsTest"))
@@ -116,8 +116,8 @@ namespace DataClientTests
 
                 client.CreateTable<Pets>();
 
-                for (int i = 0; i < 100000; i++)
-                    client.InsertEntity(new Pets() { Name = "Dog " + i, BirthDate = DateTime.Now, Offset = DateTime.Now, TestValue = 2.34F });
+                for (int i = 0; i < 10; i++)
+                    client.InsertEntity(new Pets() { Name = "Dog " + i, BirthDate = DateTime.Now, DtOffset = DateTime.Now, TestValue = 2.34F });
 
                 client.Close();
           
@@ -131,30 +131,30 @@ namespace DataClientTests
                     var s = client.GetEntity<Pets>(q.Id);
                     s.Name = "Test " + q.Id;
                     s.TestValue = 777.77F;
-                    s.Offset = null;
+                    s.DtOffset = null;
                     s.BirthDate = null;
                     client.UpdateEntity(s);
                    
                 }
-                      */
+                      
 
                 client.Open();
 
-               var t = client.GetEntities<Pets>();
+               t = client.GetEntities<Pets>();
 
-                t = client.GetEntities<Pets>("select Name from DataClient_PetsTest", false);
+                t = client.GetEntities<Pets>("select Name from DataClient_PetsTest2", false);
 
                 t = client.GetEntities<Pets>();
 
-                var jsonarr = client.GetJsonArray("select * from DataClient_PetsTest");
+                var jsonarr = client.GetJsonArray("select id as \"Id\", name as \"Name\", testvalue as \"TestValue\" from DataClient_PetsTest2");
 
-                var objlist = client.GetObjects("select * from DataClient_PetsTest");
+                var objlist = client.GetObjects("select * from DataClient_PetsTest2");
 
-                var resultset = client.GetResultSet("select * from DataClient_PetsTest");
+                var resultset = client.GetResultSet("select * from DataClient_PetsTest2");
 
-                var json = client.GetJsonObject("select Name, TestValue from DataClient_PetsTest");
+                var json = client.GetJsonObject("select Name, TestValue from DataClient_PetsTest2");
 
-                var typedresult = client.GetEntity<Pets>("select Name, TestValue from DataClient_PetsTest", false);
+                var typedresult = client.GetEntity<Pets>("select Name, TestValue from DataClient_PetsTest2", false);
 
                 var typedresult2 = client.GetEntity<Pets>(t[5].Id);
 
@@ -182,7 +182,7 @@ namespace DataClientTests
     }
 
     [DbTablePrimaryKey("Id")]
-    [DbTableName("DataClient_PetsTest")]
+    [DbTableName("DataClient_PetsTest2")]
     public class Pets
     {
         [AutoIncrement]
@@ -198,7 +198,7 @@ namespace DataClientTests
         [Ignore]
         public List<Pets> MoronField2 { get; set; }
 
-        public DateTimeOffset? Offset { get; set; }
+        public DateTimeOffset? DtOffset { get; set; }
 
         public float? TestValue { get; set; }
 
