@@ -140,7 +140,7 @@ namespace DataClientTests
 
                 client.Open();
 
-               /var t = client.GetEntities<Pets>();
+               //var t = client.GetEntities<Pets>();
 
                 var t = client.GetEntities<Pets>("select Name from DataClient_PetsTest", false);
 
