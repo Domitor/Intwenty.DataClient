@@ -126,12 +126,12 @@ namespace Intwenty.DataClient
             return InternalClient.GetEntity<T>(id);
         }
 
-        public T GetEntity<T>(string sql, bool isprocedure) where T : new()
+        public T GetEntity<T>(string sql, bool isprocedure=false) where T : new()
         {
             return InternalClient.GetEntity<T>(sql, isprocedure);
         }
 
-        public T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
+        public T GetEntity<T>(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters = null) where T : new()
         {
             return InternalClient.GetEntity<T>(sql, isprocedure, parameters);
         }
@@ -141,9 +141,9 @@ namespace Intwenty.DataClient
             return InternalClient.GetEntities<T>();
         }
 
-        public List<T> GetEntities<T>(string sqlcommand, bool isStoredProcedure) where T : new()
+        public List<T> GetEntities<T>(string sql, bool isprocedure=false) where T : new()
         {
-            return InternalClient.GetEntities<T>(sqlcommand, isStoredProcedure);
+            return InternalClient.GetEntities<T>(sql, isprocedure);
         }
 
         public List<T> GetEntities<T>(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null) where T : new()
@@ -151,24 +151,24 @@ namespace Intwenty.DataClient
             return InternalClient.GetEntities<T>(sql, isprocedure, parameters);
         }
 
-        public IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
-            return InternalClient.GetJsonObject(sql,isprocedure,parameters,resultcolumns);
+            return InternalClient.GetJsonObject(sql,isprocedure,parameters);
         }
 
-        public dynamic GetObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public dynamic GetObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
-            return InternalClient.GetObject(sql, isprocedure, parameters, resultcolumns);
+            return InternalClient.GetObject(sql, isprocedure, parameters);
         }
 
-        public IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
-            return InternalClient.GetJsonArray(sql, isprocedure, parameters, resultcolumns);
+            return InternalClient.GetJsonArray(sql, isprocedure, parameters);
         }
 
-        public List<dynamic> GetObjects(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public List<dynamic> GetObjects(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
-            return InternalClient.GetObjects(sql, isprocedure, parameters, resultcolumns);
+            return InternalClient.GetObjects(sql, isprocedure, parameters);
         }
 
         public bool TableExists(string tablename)
@@ -206,14 +206,14 @@ namespace Intwenty.DataClient
             return InternalClient.DeleteEntities(entities);
         }
 
-        public IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
-            return InternalClient.GetResultSet(sql, isprocedure, parameters, resultcolumns);
+            return InternalClient.GetResultSet(sql, isprocedure, parameters);
         }
 
-        public DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
-            return InternalClient.GetDataTable(sql,isprocedure, parameters, resultcolumns);
+            return InternalClient.GetDataTable(sql,isprocedure, parameters);
         }
 
         public List<TypeMapItem> GetDbTypeMap()

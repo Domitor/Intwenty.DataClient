@@ -109,7 +109,7 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        public dynamic GetObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public dynamic GetObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             object result = null;
 
@@ -128,8 +128,7 @@ namespace Intwenty.DataClient.Databases
 
                 while (reader.Read())
                 {
-                    var columns = GetQueryColumns(reader, resultcolumns);
-                    result = GetObject(reader, columns);
+                    result = GetObject(reader);
                     break;
                 }
 
@@ -140,7 +139,7 @@ namespace Intwenty.DataClient.Databases
             return result;
         }
 
-        public IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             JsonObjectResult result = null;
 
@@ -158,8 +157,7 @@ namespace Intwenty.DataClient.Databases
 
                 while (reader.Read())
                 {
-                    var columns = GetQueryColumns(reader, resultcolumns);
-                    result = GetJsonObjectResult(reader, columns);
+                    result = GetJsonObjectResult(reader);
                     break;
                 }
 
@@ -175,7 +173,7 @@ namespace Intwenty.DataClient.Databases
             return result;
         }
 
-        public List<dynamic> GetObjects(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public List<dynamic> GetObjects(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             var res = new List<dynamic>();
 
@@ -191,15 +189,9 @@ namespace Intwenty.DataClient.Databases
 
                 var reader = command.ExecuteReader();
 
-                var columns = new List<IntwentyResultColumn>();
                 while (reader.Read())
                 {
-
-                    if (columns.Count == 0)
-                        columns = GetQueryColumns(reader, resultcolumns);
-
-                    res.Add(GetObject(reader, columns));
-
+                    res.Add(GetObject(reader));
                 }
 
                 reader.Close();
@@ -209,7 +201,7 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        public IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             var start = DateTime.Now;
             var result = new JsonArrayResult();
@@ -226,16 +218,9 @@ namespace Intwenty.DataClient.Databases
 
                 var reader = command.ExecuteReader();
 
-
-                var columns = new List<IntwentyResultColumn>();
                 while (reader.Read())
                 {
-
-                    if (columns.Count == 0)
-                        columns = GetQueryColumns(reader, resultcolumns);
-
-                    var jsonobject = GetJsonObjectResult(reader, columns);
-                    result.JsonObjects.Add(jsonobject);
+                    result.JsonObjects.Add(GetJsonObjectResult(reader));
 
                 }
 
@@ -250,7 +235,7 @@ namespace Intwenty.DataClient.Databases
             return result;
         }
 
-        public IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             var res = new ResultSet();
 
@@ -266,28 +251,19 @@ namespace Intwenty.DataClient.Databases
 
                 var reader = command.ExecuteReader();
 
-
-                var columns = new List<IntwentyResultColumn>();
-                var rindex = 0;
-
                 while (reader.Read())
                 {
 
-                    rindex += 1;
-
-                    if (columns.Count == 0)
-                        columns = GetQueryColumns(reader, resultcolumns);
-
                     var row = new ResultSetRow();
-                    foreach (var rc in columns)
+                    for (int i = 0; i < reader.FieldCount; i++)
                     {
-                        if (reader.IsDBNull(rc.Index) && Options.JsonNullValueHandling == JsonNullValueMode.Exclude)
+                        if (reader.IsDBNull(i) && Options.JsonNullValueHandling == JsonNullValueMode.Exclude)
                             continue;
 
-                        if (reader.IsDBNull(rc.Index))
-                            row.SetValue(rc.Name, null);
+                        if (reader.IsDBNull(i))
+                            row.SetValue(reader.GetName(i), null);
                         else
-                            row.SetValue(rc.Name, reader.GetValue(rc.Index));
+                            row.SetValue(reader.GetName(i), reader.GetValue(i));
 
                     }
                     res.Rows.Add(row);
@@ -302,7 +278,7 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        public DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null)
+        public DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             var table = new DataTable();
 
@@ -405,57 +381,6 @@ namespace Intwenty.DataClient.Databases
             return GetEntityInternal<T>(id);
         }
 
-        public virtual T GetEntity<T>(string sql, bool isprocedure) where T : new()
-        {
-            return GetEntity<T>(sql, isprocedure, null);
-        }
-
-        public virtual T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
-        {
-            var key = sql.ToUpper().Replace(" ", "");
-            if (key.Length > 100)
-                key = key.Substring(0, 100);
-
-            var res = default(T);
-            var info = TypeDataHandler.GetDbTableDefinition<T>(key);
-
-            using (var command = GetCommand())
-            {
-                command.CommandText = sql;
-                if (isprocedure)
-                    command.CommandType = CommandType.StoredProcedure;
-                else
-                    command.CommandType = CommandType.Text;
-
-                AddCommandParameters(parameters, command);
-
-                var reader = command.ExecuteReader();
-
-                TypeDataHandler.AdjustToQueryResult(info, reader);
-
-                while (reader.Read())
-                {
-                    var m = new T();
-                    foreach (var col in info.Columns.OrderBy(p => p.Index))
-                    {
-
-                        if (reader.IsDBNull(col.Index))
-                            continue;
-
-                        SetPropertyValues(reader, col, m);
-
-                    }
-                    res = m;
-                    break;
-                }
-
-                reader.Close();
-                reader.Dispose();
-            }
-
-            return res;
-        }
-
         private T GetEntityInternal<T>(object id) where T : new()
         {
             var res = new T();
@@ -476,19 +401,19 @@ namespace Intwenty.DataClient.Databases
 
                 var reader = command.ExecuteReader();
 
-                TypeDataHandler.AdjustToQueryResult(info, reader);
-
                 while (reader.Read())
                 {
-                    foreach (var col in info.Columns.OrderBy(p => p.Index))
+                    for (int i = 0; i < reader.FieldCount; i++)
                     {
-
-                        if (reader.IsDBNull(col.Index))
+                        if (reader.IsDBNull(i))
                             continue;
 
-                        SetPropertyValues(reader, col, res);
-
+                        var col = info.Columns.Find(p => p.Name.ToUpper() == reader.GetName(i).ToUpper());
+                        if (col != null)
+                            SetPropertyValues(reader, col, res);
                     }
+
+                    break;
 
                 }
 
@@ -499,10 +424,59 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
+        public virtual T GetEntity<T>(string sql, bool isprocedure=false) where T : new()
+        {
+            return GetEntity<T>(sql, isprocedure, null);
+        }
+
+        public virtual T GetEntity<T>(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters = null) where T : new()
+        {
+
+            var res = new T();
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+
+            using (var command = GetCommand())
+            { 
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                   
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        if (reader.IsDBNull(i))
+                            continue;
+
+                        var col = info.Columns.Find(p => p.Name.ToUpper() == reader.GetName(i).ToUpper());
+                        if (col!=null)
+                            SetPropertyValues(reader, col, res);
+                    }
+
+                    break;
+                }
+
+                reader.Close();
+                reader.Dispose();
+            }
+
+            return res;
+        }
+
+       
+
         public virtual List<T> GetEntities<T>() where T : new()
         {
             var res = new List<T>();
             var info = TypeDataHandler.GetDbTableDefinition<T>();
+            var readercolumns = new List<IntwentyDbColumnDefinition>();
 
             using (var command = GetCommand())
             {
@@ -511,20 +485,33 @@ namespace Intwenty.DataClient.Databases
 
                 var reader = command.ExecuteReader();
 
-                TypeDataHandler.AdjustToQueryResult(info, reader);
-
                 while (reader.Read())
                 {
-                    var m = new T();
-                    foreach (var col in info.Columns.OrderBy(p => p.Index))
+                    if (readercolumns.Count == 0)
                     {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            var col = info.Columns.Find(p => p.Name.ToUpper() == reader.GetName(i).ToUpper());
+                            if (col != null)
+                            {
+                                col.Index = i;
+                                readercolumns.Add(col);
+                            }
+                        }
+                    }
 
+                    var m = new T();
+   
+                    foreach (var col in readercolumns)
+                    {
                         if (reader.IsDBNull(col.Index))
                             continue;
 
-                        SetPropertyValues(reader, col, m);
+
+                         SetPropertyValues(reader, col, res);
 
                     }
+                    
                     res.Add(m);
                 }
 
@@ -541,12 +528,10 @@ namespace Intwenty.DataClient.Databases
         }
         public virtual List<T> GetEntities<T>(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null) where T : new()
         {
-            var key = sql.ToUpper().Replace(" ", "");
-            if (key.Length > 100)
-                key = key.Substring(0, 100);
 
             var res = new List<T>();
-            var info = TypeDataHandler.GetDbTableDefinition<T>(key);
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+            var columns = new List<IntwentyDbColumnDefinition>();
 
             using (var command = GetCommand())
             {
@@ -560,18 +545,29 @@ namespace Intwenty.DataClient.Databases
 
                 var reader = command.ExecuteReader();
 
-                TypeDataHandler.AdjustToQueryResult(info, reader);
-
                 while (reader.Read())
                 {
-                    var m = new T();
-                    foreach (var col in info.Columns.OrderBy(p => p.Index))
-                    {
 
+                    if (columns.Count == 0)
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            var col = info.Columns.Find(p => p.Name.ToUpper() == reader.GetName(i).ToUpper());
+                            if (col != null)
+                            {
+                                col.Index = i;
+                                columns.Add(col);
+                            }
+                        }
+                    }
+
+                    var m = new T();
+                    foreach (var col in columns)
+                    {
                         if (reader.IsDBNull(col.Index))
                             continue;
 
-                        SetPropertyValues(reader, col, m);
+                        SetPropertyValues(reader, col, res);
 
                     }
                     res.Add(m);
@@ -721,33 +717,30 @@ namespace Intwenty.DataClient.Databases
 
         protected abstract void InferAutoIncrementalValue<T>(IntwentyDbTableDefinition info, List<IntwentySqlParameter> parameters, T entity, IDbCommand command);
 
-        protected string GetJSONValue(IDataReader r, IntwentyResultColumn resultcol)
+        protected string GetJSONValue(IDataReader r, int index)
         {
-            if (r.IsDBNull(resultcol.Index))
+            if (r.IsDBNull(index))
                 return string.Empty;
 
-            var columnname = resultcol.Name;
-            var datatypename = r.GetDataTypeName(resultcol.Index);
+            var columnname = r.GetName(index);
+            var datatypename = r.GetDataTypeName(index);
 
-            if (IsNumeric(datatypename, resultcol))
-                return "\"" + columnname + "\":" + Convert.ToString(r.GetValue(resultcol.Index)).Replace(",", ".");
-            else if (IsDateTime(datatypename, resultcol))
-                return "\"" + columnname + "\":" + "\"" + System.Text.Json.JsonEncodedText.Encode(Convert.ToDateTime(r.GetValue(resultcol.Index)).ToString("yyyy-MM-dd")).ToString() + "\"";
+            if (IsNumeric(datatypename))
+                return "\"" + columnname + "\":" + Convert.ToString(r.GetValue(index)).Replace(",", ".");
+            else if (IsDateTime(datatypename))
+                return "\"" + columnname + "\":" + "\"" + System.Text.Json.JsonEncodedText.Encode(Convert.ToDateTime(r.GetValue(index)).ToString("yyyy-MM-dd")).ToString() + "\"";
             else
-                return "\"" + columnname + "\":" + "\"" + System.Text.Json.JsonEncodedText.Encode(Convert.ToString(r.GetValue(resultcol.Index))).ToString() + "\"";
+                return "\"" + columnname + "\":" + "\"" + System.Text.Json.JsonEncodedText.Encode(Convert.ToString(r.GetValue(index))).ToString() + "\"";
 
         }
 
-        protected string GetJSONNullValue(IntwentyResultColumn resultcol)
+        protected string GetJSONNullValue(string name)
         {
-            return "\"" + resultcol.Name + "\":null";
-
+            return "\"" + name + "\":null";
         }
 
-        protected bool IsNumeric(string datatypename, IntwentyResultColumn resultcolumn)
+        protected bool IsNumeric(string datatypename)
         {
-            if (resultcolumn.IsNumeric)
-                return true;
 
             if (datatypename.ToUpper().Contains("NUMERIC"))
                 return true;
@@ -764,10 +757,8 @@ namespace Intwenty.DataClient.Databases
             return false;
         }
 
-        protected bool IsDateTime(string datatypename, IntwentyResultColumn resultcolumn)
+        protected bool IsDateTime(string datatypename)
         {
-            if (resultcolumn.IsDateTime)
-                return true;
 
             if (datatypename.ToUpper() == "TIMESTAMP")
                 return true;
@@ -779,61 +770,41 @@ namespace Intwenty.DataClient.Databases
             return false;
         }
 
-        private List<IntwentyResultColumn> GetQueryColumns(IDataReader reader, IIntwentyResultColumn[] resultcolumns)
+        private List<IntwentyResultColumn> GetQueryColumns(IDataReader reader)
         {
             var res = new List<IntwentyResultColumn>();
 
-
-            if (resultcolumns == null || (resultcolumns != null && resultcolumns.Count() == 0))
+            for (int i = 0; i < reader.FieldCount; i++)
             {
-                for (int i = 0; i < reader.FieldCount; i++)
-                {
-                    var rc = new IntwentyResultColumn() { Name = reader.GetName(i), Index = i };
-                    res.Add(rc);
-                }
-            }
-            else
-            {
-                for (int c = 0; c < resultcolumns.Length; c++)
-                {
-                    var col = resultcolumns[c];
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        if (reader.GetName(i).ToLower() == col.Name.ToLower())
-                        {
-                            res.Add(new IntwentyResultColumn() { Name = col.Name, Index = i });
-                            break;
-                        }
-                    }
-
-                 }
+                var rc = new IntwentyResultColumn() { Name = reader.GetName(i), Index = i };
+                res.Add(rc);
             }
 
-         
             return res;
         }
 
 
-        private JsonObjectResult GetJsonObjectResult(IDataReader openreader, List<IntwentyResultColumn> columns)
+        private JsonObjectResult GetJsonObjectResult(IDataReader openreader)
         {
             var result = new JsonObjectResult();
             var sb = new StringBuilder();
             var separator = ' ';
             sb.Append("{");
-            foreach (var rc in columns)
-            {
-                result.Values.Add(new ResultSetValue() { Name = rc.Name, Value = openreader.GetValue(rc.Index) });
 
-                if (openreader.IsDBNull(rc.Index) && Options.JsonNullValueHandling == JsonNullValueMode.Exclude)
+            for (int i = 0; i < openreader.FieldCount; i++)
+            {
+                result.Values.Add(new ResultSetValue() { Name = openreader.GetName(i), Value = openreader.GetValue(i) });
+
+                if (openreader.IsDBNull(i) && Options.JsonNullValueHandling == JsonNullValueMode.Exclude)
                     continue;
 
-                if (openreader.IsDBNull(rc.Index))
+                if (openreader.IsDBNull(i))
                 {
-                    sb.Append(separator + GetJSONNullValue(rc));
+                    sb.Append(separator + GetJSONNullValue(openreader.GetName(i)));
                 }
                 else
                 {
-                    sb.Append(separator + GetJSONValue(openreader, rc));
+                    sb.Append(separator + GetJSONValue(openreader,i));
                 }
                 separator = ',';
             }
@@ -843,23 +814,22 @@ namespace Intwenty.DataClient.Databases
 
         }
 
-        private dynamic GetObject(IDataReader openreader, List<IntwentyResultColumn> columns)
+        private dynamic GetObject(IDataReader openreader)
         {
             var result = new ExpandoObject() as IDictionary<string, object>;
 
-            foreach (var rc in columns)
+            for (int i = 0; i < openreader.FieldCount; i++)
             {
-
-                if (openreader.IsDBNull(rc.Index) && Options.JsonNullValueHandling == JsonNullValueMode.Exclude)
+                if (openreader.IsDBNull(i) && Options.JsonNullValueHandling == JsonNullValueMode.Exclude)
                     continue;
 
-                if (openreader.IsDBNull(rc.Index))
+                if (openreader.IsDBNull(i))
                 {
-                    result.Add(rc.Name, openreader.GetValue(rc.Index));
+                    result.Add(openreader.GetName(i), null);
                 }
                 else
                 {
-                    result.Add(rc.Name, null);
+                    result.Add(openreader.GetName(i), openreader.GetValue(i));
                 }
             }
 

@@ -10,54 +10,23 @@ namespace Intwenty.DataClient.Reflection
     {
 
 
-        public static IntwentyDbTableDefinition GetDbTableDefinition<T>(string key)
-        {
-            var currenttype = typeof(T);
-            var compositekey = (currenttype.Name + "_" + key).ToUpper();
-            return GetIntwentyDbTableDefinition<T>(compositekey, currenttype);
-        }
 
         public static IntwentyDbTableDefinition GetDbTableDefinition<T>()
         {
+            var t = GetIntwentyDbTableDefinition<T>();
+            t.ResetDataReaderIndexes();
+            return t;
+        }
+
+      
+
+        private static IntwentyDbTableDefinition GetIntwentyDbTableDefinition<T>()
+        {
+
             var currenttype = typeof(T);
             var key = currenttype.Name.ToUpper();
-            return GetIntwentyDbTableDefinition<T>(key, currenttype);
-        }
-
-        public static void AdjustToQueryResult(IntwentyDbTableDefinition t, IDataReader reader)
-        {
-            if (reader == null)
-                return;
-
-            foreach (var c in t.Columns)
-                c.IsInQueryResult = false;
-
-            for (int c = 0; c < t.Columns.Count; c++)
-            {
-                var col = t.Columns[c];
-                for (int i = 0; i < reader.FieldCount; i++)
-                {
-                    if (reader.GetName(i).ToLower() == col.Name.ToLower())
-                    {
-                        col.IsInQueryResult = true;
-                        col.Index = i;
-                        break;
-                    }
-                }
-
-            }
-
-
-            t.Columns.RemoveAll(p => !p.IsInQueryResult);
-
-        }
-
-
-        private static IntwentyDbTableDefinition GetIntwentyDbTableDefinition<T>(string key, Type currenttype)
-        {
 
             var cache = MemoryCache.Default;
-
             IntwentyDbTableDefinition result = cache.Get(key) as IntwentyDbTableDefinition;
             if (result != null)
             {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 
 namespace Intwenty.DataClient.Model
@@ -28,10 +29,17 @@ namespace Intwenty.DataClient.Model
 
         public bool HasAutoIncrementalColumn { get { return Columns.Exists(p=> p.IsAutoIncremental); } }
 
-
         private string pkcolnames { get; set; }
 
-       
+
+        public void ResetDataReaderIndexes()
+        {
+            for (int i=0;  i< Columns.Count; i++)
+            {
+                Columns[i].Index = i;
+            }
+
+        }
 
         public IntwentyDbTableDefinition()
         {
@@ -42,7 +50,8 @@ namespace Intwenty.DataClient.Model
             PrimaryKeyColumnNamesList = new List<string>();
         }
 
-     
+
+      
        
 
     }
