@@ -329,6 +329,11 @@ namespace Intwenty.DataClient.Databases.SqlServer
             return result;
         }
 
+        public override string GetModifiedSelectStatement(string sqlstatement)
+        {
+            return sqlstatement;
+        }
+
 
     }
 }

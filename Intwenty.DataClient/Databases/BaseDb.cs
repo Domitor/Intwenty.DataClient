@@ -113,10 +113,11 @@ namespace Intwenty.DataClient.Databases
         {
             object result = null;
 
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
 
             using (var command = GetCommand())
             {
-                command.CommandText = sql;
+                command.CommandText = sqlstmt;
                 if (isprocedure)
                     command.CommandType = CommandType.StoredProcedure;
                 else
@@ -143,9 +144,11 @@ namespace Intwenty.DataClient.Databases
         {
             JsonObjectResult result = null;
 
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
             using (var command = GetCommand())
             {
-                command.CommandText = sql;
+                command.CommandText = sqlstmt;
                 if (isprocedure)
                     command.CommandType = CommandType.StoredProcedure;
                 else
@@ -177,9 +180,11 @@ namespace Intwenty.DataClient.Databases
         {
             var res = new List<dynamic>();
 
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
             using (var command = GetCommand())
             {
-                command.CommandText = sql;
+                command.CommandText = sqlstmt;
                 if (isprocedure)
                     command.CommandType = CommandType.StoredProcedure;
                 else
@@ -206,9 +211,11 @@ namespace Intwenty.DataClient.Databases
             var start = DateTime.Now;
             var result = new JsonArrayResult();
 
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
             using (var command = GetCommand())
             {
-                command.CommandText = sql;
+                command.CommandText = sqlstmt;
                 if (isprocedure)
                     command.CommandType = CommandType.StoredProcedure;
                 else
@@ -239,9 +246,11 @@ namespace Intwenty.DataClient.Databases
         {
             var res = new ResultSet();
 
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
             using (var command = GetCommand())
             {
-                command.CommandText = sql;
+                command.CommandText = sqlstmt;
                 if (isprocedure)
                     command.CommandType = CommandType.StoredProcedure;
                 else
@@ -282,9 +291,11 @@ namespace Intwenty.DataClient.Databases
         {
             var table = new DataTable();
 
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
             using (var command = GetCommand())
             {
-                command.CommandText = sql;
+                command.CommandText = sqlstmt;
                 if (isprocedure)
                     command.CommandType = CommandType.StoredProcedure;
                 else
@@ -435,9 +446,11 @@ namespace Intwenty.DataClient.Databases
             var res = new T();
             var info = TypeDataHandler.GetDbTableDefinition<T>();
 
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
             using (var command = GetCommand())
             { 
-                command.CommandText = sql;
+                command.CommandText = sqlstmt;
                 if (isprocedure)
                     command.CommandType = CommandType.StoredProcedure;
                 else
@@ -529,9 +542,11 @@ namespace Intwenty.DataClient.Databases
             var info = TypeDataHandler.GetDbTableDefinition<T>();
             var readercolumns = new Dictionary<int, IntwentyDbColumnDefinition>();
 
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
             using (var command = GetCommand())
             {
-                command.CommandText = sql;
+                command.CommandText = sqlstmt;
                 if (isprocedure)
                     command.CommandType = CommandType.StoredProcedure;
                 else

@@ -333,6 +333,11 @@ namespace Intwenty.DataClient.Databases.SQLite
             return result;
         }
 
-      
+        public override string GetModifiedSelectStatement(string sqlstatement)
+        {
+            return sqlstatement;
+        }
+
+
     }
 }

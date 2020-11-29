@@ -22,7 +22,11 @@ namespace Intwenty.DataClient.Databases
 
         public abstract string GetDeleteSql<T>(IntwentyDbTableDefinition model, T instance, List<IntwentySqlParameter> parameters);
 
+        public abstract string GetModifiedSelectStatement(string sqlstatement);
+
         protected abstract string GetCreateColumnSql(IntwentyDbColumnDefinition model);
+
+      
 
     }
 }

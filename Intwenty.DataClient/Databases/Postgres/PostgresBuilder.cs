@@ -304,5 +304,91 @@ namespace Intwenty.DataClient.Databases.Postgres
             return result;
         }
 
+        public override string GetModifiedSelectStatement(string sqlstatement)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(sqlstatement))
+                    return sqlstatement;
+
+                var uppersql = sqlstatement.ToUpper();
+                if (!uppersql.Contains("SELECT "))
+                    return sqlstatement;
+
+                if (!uppersql.Contains("FROM "))
+                    return sqlstatement;
+
+               
+
+                var startindex = uppersql.IndexOf("SELECT ") + 7;
+                var endindex = uppersql.IndexOf("FROM ");
+
+                if (!(endindex > startindex))
+                    return sqlstatement;
+
+                var selectvaluestring = sqlstatement.Substring(startindex, (endindex - startindex));
+                if (selectvaluestring.Contains("*"))
+                    return sqlstatement;
+
+                var modifiedselects = new List<string>();
+                var selectvaluearray = selectvaluestring.Split(",".ToCharArray());
+                for (int i = 0; i < selectvaluearray.Length; i++)
+                {
+                    var modselect = selectvaluearray[i];
+                    modselect = modselect.Trim();
+                    if (string.IsNullOrEmpty(modselect))
+                        continue;
+
+                    if (modselect.ToUpper().Contains(" AS "))
+                        return sqlstatement;
+
+                    if (modselect.ToUpper().Contains("DISTINCT "))
+                        return sqlstatement;
+
+                    if (modselect.ToUpper().Contains("COUNT( "))
+                        return sqlstatement;
+
+                    if (modselect.Contains("."))
+                    {
+                        var arr = modselect.Split(".".ToCharArray());
+                        if (arr.Length < 2)
+                            return sqlstatement;
+
+                        var name = arr[arr.Length - 1];
+                        modselect = string.Format(modselect + " AS \"{0}\"", name);
+                        modifiedselects.Add(modselect);
+
+                    }
+                    else
+                    {
+                        modselect = string.Format(modselect + " AS \"{0}\"", modselect);
+                        modifiedselects.Add(modselect);
+
+                    }
+
+
+                }
+
+                if (modifiedselects.Count == 0)
+                    return sqlstatement;
+
+                var sep = ' ';
+                var sb = new StringBuilder();
+                foreach (var s in modifiedselects)
+                {
+                    sb.Append(sep + s);
+                    sep = ',';
+                }
+
+                var newstatement =  string.Format("SELECT {0} FROM " + sqlstatement.Substring(endindex + 5), sb.ToString());
+                return newstatement;
+
+            }
+            catch { }
+
+            return sqlstatement;
+
+        }
+
     }
 }

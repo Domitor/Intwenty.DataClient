@@ -320,5 +320,10 @@ namespace Intwenty.DataClient.Databases.MariaDb
             return result;
         }
 
+        public override string GetModifiedSelectStatement(string sqlstatement)
+        {
+            return sqlstatement;
+        }
+
     }
 }
