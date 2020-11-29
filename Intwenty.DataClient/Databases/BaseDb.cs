@@ -410,7 +410,7 @@ namespace Intwenty.DataClient.Databases
 
                         var col = info.Columns.Find(p => p.Name.ToUpper() == reader.GetName(i).ToUpper());
                         if (col != null)
-                            SetPropertyValues(reader, col, res);
+                            SetPropertyValues(reader, new KeyValuePair<int, IntwentyDbColumnDefinition>(i, col), res);
                     }
 
                     break;
@@ -457,7 +457,7 @@ namespace Intwenty.DataClient.Databases
 
                         var col = info.Columns.Find(p => p.Name.ToUpper() == reader.GetName(i).ToUpper());
                         if (col!=null)
-                            SetPropertyValues(reader, col, res);
+                            SetPropertyValues(reader, new KeyValuePair<int, IntwentyDbColumnDefinition>(i, col), res);
                     }
 
                     break;
@@ -476,7 +476,7 @@ namespace Intwenty.DataClient.Databases
         {
             var res = new List<T>();
             var info = TypeDataHandler.GetDbTableDefinition<T>();
-            var readercolumns = new List<IntwentyDbColumnDefinition>();
+            var readercolumns = new Dictionary<int,IntwentyDbColumnDefinition>();
 
             using (var command = GetCommand())
             {
@@ -493,10 +493,7 @@ namespace Intwenty.DataClient.Databases
                         {
                             var col = info.Columns.Find(p => p.Name.ToUpper() == reader.GetName(i).ToUpper());
                             if (col != null)
-                            {
-                                col.Index = i;
-                                readercolumns.Add(col);
-                            }
+                                readercolumns.Add(i,col);
                         }
                     }
 
@@ -504,11 +501,10 @@ namespace Intwenty.DataClient.Databases
    
                     foreach (var col in readercolumns)
                     {
-                        if (reader.IsDBNull(col.Index))
+                        if (reader.IsDBNull(col.Key))
                             continue;
 
-
-                         SetPropertyValues(reader, col, res);
+                         SetPropertyValues(reader, col, m);
 
                     }
                     
@@ -531,7 +527,7 @@ namespace Intwenty.DataClient.Databases
 
             var res = new List<T>();
             var info = TypeDataHandler.GetDbTableDefinition<T>();
-            var columns = new List<IntwentyDbColumnDefinition>();
+            var readercolumns = new Dictionary<int, IntwentyDbColumnDefinition>();
 
             using (var command = GetCommand())
             {
@@ -548,26 +544,24 @@ namespace Intwenty.DataClient.Databases
                 while (reader.Read())
                 {
 
-                    if (columns.Count == 0)
+                    if (readercolumns.Count == 0)
                     {
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
                             var col = info.Columns.Find(p => p.Name.ToUpper() == reader.GetName(i).ToUpper());
                             if (col != null)
-                            {
-                                col.Index = i;
-                                columns.Add(col);
-                            }
+                                readercolumns.Add(i,col);
+                            
                         }
                     }
 
                     var m = new T();
-                    foreach (var col in columns)
+                    foreach (var col in readercolumns)
                     {
-                        if (reader.IsDBNull(col.Index))
+                        if (reader.IsDBNull(col.Key))
                             continue;
 
-                        SetPropertyValues(reader, col, res);
+                        SetPropertyValues(reader, col, m);
 
                     }
                     res.Add(m);
@@ -687,28 +681,28 @@ namespace Intwenty.DataClient.Databases
 
         protected abstract IDbTransaction GetTransaction();
 
-        protected virtual void SetPropertyValues<T>(IDataReader reader, IntwentyDbColumnDefinition column, T instance)
+        protected virtual void SetPropertyValues<T>(IDataReader reader, KeyValuePair<int,IntwentyDbColumnDefinition> column, T instance)
         {
 
-            if (column.IsInt32)
-                column.Property.SetValue(instance, reader.GetInt32(column.Index), null);
-            else if (column.IsBoolean)
-                column.Property.SetValue(instance, reader.GetBoolean(column.Index), null);
-            else if (column.IsDecimal)
-                column.Property.SetValue(instance, reader.GetDecimal(column.Index), null);
-            else if (column.IsSingle)
-                column.Property.SetValue(instance, reader.GetFloat(column.Index), null);
-            else if (column.IsDouble)
-                column.Property.SetValue(instance, reader.GetDouble(column.Index), null);
-            else if (column.IsDateTime)
-                column.Property.SetValue(instance, reader.GetDateTime(column.Index), null);
-            else if (column.IsDateTimeOffset)
-                column.Property.SetValue(instance, new DateTimeOffset(reader.GetDateTime(column.Index)), null);
-            else if (column.IsString)
-                column.Property.SetValue(instance, reader.GetString(column.Index), null);
+            if (column.Value.IsInt32)
+                column.Value.Property.SetValue(instance, reader.GetInt32(column.Key), null);
+            else if (column.Value.IsBoolean)
+                column.Value.Property.SetValue(instance, reader.GetBoolean(column.Key), null);
+            else if (column.Value.IsDecimal)
+                column.Value.Property.SetValue(instance, reader.GetDecimal(column.Key), null);
+            else if (column.Value.IsSingle)
+                column.Value.Property.SetValue(instance, reader.GetFloat(column.Key), null);
+            else if (column.Value.IsDouble)
+                column.Value.Property.SetValue(instance, reader.GetDouble(column.Key), null);
+            else if (column.Value.IsDateTime)
+                column.Value.Property.SetValue(instance, reader.GetDateTime(column.Key), null);
+            else if (column.Value.IsDateTimeOffset)
+                column.Value.Property.SetValue(instance, new DateTimeOffset(reader.GetDateTime(column.Key)), null);
+            else if (column.Value.IsString)
+                column.Value.Property.SetValue(instance, reader.GetString(column.Key), null);
             else
             {
-                column.Property.SetValue(instance, reader.GetValue(column.Index), null);
+                column.Value.Property.SetValue(instance, reader.GetValue(column.Key), null);
             }
         }
 
@@ -717,20 +711,20 @@ namespace Intwenty.DataClient.Databases
 
         protected abstract void InferAutoIncrementalValue<T>(IntwentyDbTableDefinition info, List<IntwentySqlParameter> parameters, T entity, IDbCommand command);
 
-        protected string GetJSONValue(IDataReader r, int index)
+        protected string GetJSONValue(IDataReader reader, int index)
         {
-            if (r.IsDBNull(index))
+            if (reader.IsDBNull(index))
                 return string.Empty;
 
-            var columnname = r.GetName(index);
-            var datatypename = r.GetDataTypeName(index);
+            var columnname = reader.GetName(index);
+            var datatypename = reader.GetDataTypeName(index);
 
             if (IsNumeric(datatypename))
-                return "\"" + columnname + "\":" + Convert.ToString(r.GetValue(index)).Replace(",", ".");
+                return "\"" + columnname + "\":" + Convert.ToString(reader.GetValue(index)).Replace(",", ".");
             else if (IsDateTime(datatypename))
-                return "\"" + columnname + "\":" + "\"" + System.Text.Json.JsonEncodedText.Encode(Convert.ToDateTime(r.GetValue(index)).ToString("yyyy-MM-dd")).ToString() + "\"";
+                return "\"" + columnname + "\":" + "\"" + System.Text.Json.JsonEncodedText.Encode(Convert.ToDateTime(reader.GetValue(index)).ToString("yyyy-MM-dd")).ToString() + "\"";
             else
-                return "\"" + columnname + "\":" + "\"" + System.Text.Json.JsonEncodedText.Encode(Convert.ToString(r.GetValue(index))).ToString() + "\"";
+                return "\"" + columnname + "\":" + "\"" + System.Text.Json.JsonEncodedText.Encode(Convert.ToString(reader.GetValue(index))).ToString() + "\"";
 
         }
 
@@ -770,20 +764,7 @@ namespace Intwenty.DataClient.Databases
             return false;
         }
 
-        private List<IntwentyResultColumn> GetQueryColumns(IDataReader reader)
-        {
-            var res = new List<IntwentyResultColumn>();
-
-            for (int i = 0; i < reader.FieldCount; i++)
-            {
-                var rc = new IntwentyResultColumn() { Name = reader.GetName(i), Index = i };
-                res.Add(rc);
-            }
-
-            return res;
-        }
-
-
+    
         private JsonObjectResult GetJsonObjectResult(IDataReader openreader)
         {
             var result = new JsonObjectResult();

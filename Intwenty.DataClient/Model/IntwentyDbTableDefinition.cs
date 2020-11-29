@@ -32,15 +32,6 @@ namespace Intwenty.DataClient.Model
         private string pkcolnames { get; set; }
 
 
-        public void ResetDataReaderIndexes()
-        {
-            for (int i=0;  i< Columns.Count; i++)
-            {
-                Columns[i].Index = i;
-            }
-
-        }
-
         public IntwentyDbTableDefinition()
         {
 

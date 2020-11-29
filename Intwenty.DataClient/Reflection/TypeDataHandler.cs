@@ -9,18 +9,7 @@ namespace Intwenty.DataClient.Reflection
     static class TypeDataHandler
     {
 
-
-
         public static IntwentyDbTableDefinition GetDbTableDefinition<T>()
-        {
-            var t = GetIntwentyDbTableDefinition<T>();
-            t.ResetDataReaderIndexes();
-            return t;
-        }
-
-      
-
-        private static IntwentyDbTableDefinition GetIntwentyDbTableDefinition<T>()
         {
 
             var currenttype = typeof(T);
@@ -72,7 +61,9 @@ namespace Intwenty.DataClient.Reflection
                 if (property.PropertyType.IsArray)
                     continue;
 
-                var column = new IntwentyDbColumnDefinition() { Id=membername,  Name = membername, Property = property };
+
+                colindex++;
+                var column = new IntwentyDbColumnDefinition() { Id=membername,  Name = membername, Property = property, Index = colindex };
 
                 var autoinc = property.GetCustomAttributes(typeof(AutoIncrement), false);
                 if (autoinc != null && autoinc.Length > 0)
@@ -117,8 +108,6 @@ namespace Intwenty.DataClient.Reflection
                 else if (typestring.ToUpper() == "SYSTEM.STRING")
                     column.IsString = true;
 
-                 colindex += 1;
-                 column.Index = colindex;
                  result.Columns.Add(column);
                
 

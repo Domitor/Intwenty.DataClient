@@ -92,18 +92,18 @@ namespace Intwenty.DataClient.Databases.SqlServer
             return new SqlServerBuilder();
         }
 
-        protected override void SetPropertyValues<T>(IDataReader reader, IntwentyDbColumnDefinition column, T instance)
+        protected override void SetPropertyValues<T>(IDataReader reader, KeyValuePair<int,IntwentyDbColumnDefinition> column, T instance)
         {
-            if (column.IsInt32)
-                column.Property.SetValue(instance, reader.GetInt32(column.Index), null);
-            else if (column.IsBoolean)
-                column.Property.SetValue(instance, Convert.ToBoolean(reader.GetInt32(column.Index)), null);
-            else if (column.IsDecimal)
-                column.Property.SetValue(instance, Convert.ToDecimal(reader.GetValue(column.Index)), null);
-            else if (column.IsSingle)
-                column.Property.SetValue(instance, Convert.ToSingle(reader.GetValue(column.Index)), null);
-            else if (column.IsDouble)
-                column.Property.SetValue(instance, Convert.ToDouble(reader.GetValue(column.Index)), null);
+            if (column.Value.IsInt32)
+                column.Value.Property.SetValue(instance, reader.GetInt32(column.Key), null);
+            else if (column.Value.IsBoolean)
+                column.Value.Property.SetValue(instance, Convert.ToBoolean(reader.GetInt32(column.Key)), null);
+            else if (column.Value.IsDecimal)
+                column.Value.Property.SetValue(instance, Convert.ToDecimal(reader.GetValue(column.Key)), null);
+            else if (column.Value.IsSingle)
+                column.Value.Property.SetValue(instance, Convert.ToSingle(reader.GetValue(column.Key)), null);
+            else if (column.Value.IsDouble)
+                column.Value.Property.SetValue(instance, Convert.ToDouble(reader.GetValue(column.Key)), null);
             else
                 base.SetPropertyValues(reader, column, instance);
 
