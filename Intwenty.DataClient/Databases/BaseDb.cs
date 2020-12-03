@@ -394,7 +394,7 @@ namespace Intwenty.DataClient.Databases
 
         private T GetEntityInternal<T>(object id) where T : new()
         {
-            var res = new T();
+            var res = default(T);
             var info = TypeDataHandler.GetDbTableDefinition<T>();
 
             if (info.PrimaryKeyColumnNamesList.Count == 0)
@@ -414,6 +414,7 @@ namespace Intwenty.DataClient.Databases
 
                 while (reader.Read())
                 {
+                    res = new T();
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
                         if (reader.IsDBNull(i))
@@ -443,7 +444,7 @@ namespace Intwenty.DataClient.Databases
         public virtual T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
         {
 
-            var res = new T();
+            var res = default(T);
             var info = TypeDataHandler.GetDbTableDefinition<T>();
 
             var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
@@ -462,7 +463,7 @@ namespace Intwenty.DataClient.Databases
 
                 while (reader.Read())
                 {
-                   
+                    res = new T();
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
                         if (reader.IsDBNull(i))
@@ -592,6 +593,9 @@ namespace Intwenty.DataClient.Databases
 
         public virtual int InsertEntity<T>(T entity)
         {
+            if (entity == null)
+                return 0;
+
             var info = TypeDataHandler.GetDbTableDefinition<T>();
             var parameters = new List<IntwentySqlParameter>();
             int res;
@@ -625,6 +629,9 @@ namespace Intwenty.DataClient.Databases
 
         public int UpdateEntity<T>(T entity)
         {
+            if (entity == null)
+                return 0;
+
             var info = TypeDataHandler.GetDbTableDefinition<T>();
             var parameters = new List<IntwentySqlParameter>();
             var keyparameters = new List<IntwentySqlParameter>();
@@ -660,6 +667,9 @@ namespace Intwenty.DataClient.Databases
 
         public int DeleteEntities<T>(IEnumerable<T> entities)
         {
+            if (entities == null)
+                return 0;
+
             var res = 0;
             foreach (var t in entities)
             {
@@ -670,6 +680,9 @@ namespace Intwenty.DataClient.Databases
 
         public int DeleteEntity<T>(T entity)
         {
+            if (entity == null)
+                return 0;
+
             int res;
             var info = TypeDataHandler.GetDbTableDefinition<T>();
             var parameters = new List<IntwentySqlParameter>();

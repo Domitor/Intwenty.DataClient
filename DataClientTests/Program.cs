@@ -18,7 +18,7 @@ namespace DataClientTests
 
         private static void Tests()
         {
-            var client = new Connection(DBMS.MariaDB, @"Server=127.0.0.1;Database=IntwentyDb;uid=root;Password=xxxx");
+            var client = new Connection(DBMS.MariaDB, @"Server=127.0.0.1;Database=IntwentyDb;uid=root;Password=xxxxx");
             client.Open();
 
             try
@@ -46,6 +46,8 @@ namespace DataClientTests
                     client.UpdateEntity(s);
 
                 }
+
+                var nulltest = client.GetEntity<DataClientTest>(678234);
 
                 t = client.GetEntities<DataClientTest>();
 
