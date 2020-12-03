@@ -7,9 +7,12 @@ A .net core database client library that includes ORM functions, JSON support an
 Intwenty.DataClient is a laser fast database client library with a limited set of functions for object relational mapping and generating JSON directly from SQL query results. 
 
 ## Implementation
-Instead of extending the IDbConnection Intwenty.DataClient wraps around other libraries that implements IDbConnection and IDbCommand. It works as a generic abstraction layer that allows users to switch database without much concern of sql flavour. For all methods that return data the DataReader of the underlying library is used internally.
+Instead of extending the IDbConnection Intwenty.DataClient works as a generic abstraction layer and wraps around other libraries that implements IDbConnection and IDbCommand. All methods on the IDataClient interface that not explicitly takes an sql statment as parameter (GetEntity<T>, InsertEntity<T> etc) generates sql for all supported databases.
 
-### Included libraries
+## Performance
+This is a very fast library but it relies on the DbCommand and the DataReader of the underlying libraries.
+
+## Included libraries
 * MySqlConnector
 * NpgSql
 * System.Data.SqlClient
@@ -18,7 +21,8 @@ Instead of extending the IDbConnection Intwenty.DataClient wraps around other li
 ## Supported Databases
 Intwenty.DataClient is built as a wrapper around popular client libraries for MS SQLServer, MariaDb, Sqlite and Postgres. This means that all ORM functions and other functions that generates sql is guranteed to work in all databases.
 
-
+## Json String Functions
+Except for methods for retrieving data as objects of type T, and dynamic, there is also the functions: GetJsonObject and GetJsonArray which returns objects including json strings constructed directly from the datareader of the underlying library.
 
 ## Example
 
@@ -72,12 +76,14 @@ Intwenty.DataClient is built as a wrapper around popular client libraries for MS
         T GetEntity<T>(string sql, bool isprocedure) where T : new();
         T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new();
         List<T> GetEntities<T>() where T : new();
-        List<T> GetEntities<T>(string sql, bool isprocedure = false) where T : new();
-        List<T> GetEntities<T>(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters=null) where T : new();
-        IJsonObjectResult GetJSONObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
-        IJsonArrayResult GetJSONArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
-        IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
-        DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null, IIntwentyResultColumn[] resultcolumns = null);
+        List<T> GetEntities<T>(string sql, bool isprocedure=false) where T : new();
+        List<T> GetEntities<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters=null) where T : new();
+        IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
+        IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
+        dynamic GetObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
+        List<dynamic> GetObjects(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
+        IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
+        DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         int InsertEntity<T>(T entity);
         int InsertEntity(string json, string tablename);
         int InsertEntity(JsonElement json, string tablename);
