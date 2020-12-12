@@ -25,9 +25,7 @@ namespace DataClientTests
             {
 
                 if (client.TableExists("DataClient_TestTable"))
-                {
                     client.RunCommand("DROP TABLE DataClient_TestTable");
-                }
 
                 client.CreateTable<DataClientTest>();
 
