@@ -21,8 +21,6 @@ This is a very fast library but it relies on the DbCommand and the DataReader of
 ## Supported Databases
 Intwenty.DataClient is built as a wrapper around popular client libraries for MS SQLServer, MariaDb, Sqlite and Postgres. This means that all ORM functions and other functions that generates sql is guranteed to work in all databases.
 
-## Json String Functions
-Except for methods for retrieving data as objects of type T, and dynamic, there is also the functions: GetJsonObject and GetJsonArray which returns objects including json strings constructed directly from the datareader of the underlying library.
 
 ## Example
 
@@ -116,5 +114,8 @@ Intwenty.DataClient uses it own set of annotations to support ORM functions
           [Ignore]
           public int Col5 { get; set; }
        }
+
+## Json String Functions
+Except for the methods used for retrieving data as objects of type T, and dynamic, there is also the functions: GetJsonObject and GetJsonArray which returns objects including json strings constructed directly from the datareader of the underlying library.
 
 
