@@ -50,9 +50,11 @@ namespace Intwenty.DataClient
 
 
         List<T> GetEntities<T>() where T : new();
+        Task<List<T>> GetEntitiesAsync<T>() where T : new();
         List<T> GetEntities<T>(string sql, bool isprocedure=false) where T : new();
+        Task<List<T>> GetEntitiesAsync<T>(string sql, bool isprocedure = false) where T : new();
         List<T> GetEntities<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters=null) where T : new();
-
+        Task<List<T>> GetEntitiesAsync<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new();
 
         IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);

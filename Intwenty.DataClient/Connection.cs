@@ -219,14 +219,29 @@ namespace Intwenty.DataClient
             return InternalClient.GetEntities<T>();
         }
 
+        public async Task<List<T>> GetEntitiesAsync<T>() where T : new()
+        {
+            return await InternalClient.GetEntitiesAsync<T>();
+        }
+
         public List<T> GetEntities<T>(string sql, bool isprocedure=false) where T : new()
         {
             return InternalClient.GetEntities<T>(sql, isprocedure);
         }
 
+        public async Task<List<T>> GetEntitiesAsync<T>(string sql, bool isprocedure = false) where T : new()
+        {
+            return await InternalClient.GetEntitiesAsync<T>(sql, isprocedure);
+        }
+
         public List<T> GetEntities<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
         {
             return InternalClient.GetEntities<T>(sql, isprocedure, parameters);
+        }
+
+        public async Task<List<T>> GetEntitiesAsync<T>(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null) where T : new()
+        {
+            return await InternalClient.GetEntitiesAsync<T>(sql, isprocedure, parameters);
         }
 
         public IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)

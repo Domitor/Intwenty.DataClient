@@ -627,7 +627,7 @@ namespace Intwenty.DataClient.Databases
                 }
 
                 await reader.CloseAsync();
-                reader.Dispose();
+                await reader.DisposeAsync();
             }
 
             return res;
@@ -723,7 +723,7 @@ namespace Intwenty.DataClient.Databases
                 }
 
                 await reader.CloseAsync();
-                reader.Dispose();
+                await reader.DisposeAsync();
             }
 
             return res;
@@ -777,10 +777,64 @@ namespace Intwenty.DataClient.Databases
 
             return res;
         }
+
+        public virtual async Task<List<T>> GetEntitiesAsync<T>() where T : new()
+        {
+            var res = new List<T>();
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+            var readercolumns = new Dictionary<int, IntwentyDbColumnDefinition>();
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = string.Format("SELECT * FROM {0}", info.Name);
+                command.CommandType = CommandType.Text;
+
+                var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    if (readercolumns.Count == 0)
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            var col = info.Columns.Find(p => p.Name.ToUpper() == reader.GetName(i).ToUpper());
+                            if (col != null)
+                                readercolumns.Add(i, col);
+                        }
+                    }
+
+                    var m = new T();
+
+                    foreach (var col in readercolumns)
+                    {
+                        if (reader.IsDBNull(col.Key))
+                            continue;
+
+                        SetPropertyValues(reader, col, m);
+
+                    }
+
+                    res.Add(m);
+                }
+
+                await reader.CloseAsync();
+                await reader.DisposeAsync();
+            }
+
+
+            return res;
+        }
+
         public virtual List<T> GetEntities<T>(string sql, bool isprocedure = false) where T : new() 
         {
             return GetEntities<T>(sql, isprocedure, null);
         }
+
+        public virtual async Task<List<T>> GetEntitiesAsync<T>(string sql, bool isprocedure = false) where T : new()
+        {
+            return await GetEntitiesAsync<T>(sql, isprocedure, null);
+        }
+
         public virtual List<T> GetEntities<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
         {
 
@@ -830,6 +884,60 @@ namespace Intwenty.DataClient.Databases
 
                 reader.Close();
                 reader.Dispose();
+            }
+
+            return res;
+        }
+
+        public virtual async Task<List<T>> GetEntitiesAsync<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
+        {
+
+            var res = new List<T>();
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+            var readercolumns = new Dictionary<int, IntwentyDbColumnDefinition>();
+
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = sqlstmt;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+
+                    if (readercolumns.Count == 0)
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            var col = info.Columns.Find(p => p.Name.ToUpper() == reader.GetName(i).ToUpper());
+                            if (col != null)
+                                readercolumns.Add(i, col);
+
+                        }
+                    }
+
+                    var m = new T();
+                    foreach (var col in readercolumns)
+                    {
+                        if (reader.IsDBNull(col.Key))
+                            continue;
+
+                        SetPropertyValues(reader, col, m);
+
+                    }
+                    res.Add(m);
+                }
+
+                await reader.CloseAsync();
+                await reader.DisposeAsync();
             }
 
             return res;
