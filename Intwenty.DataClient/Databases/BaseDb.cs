@@ -3,10 +3,12 @@ using Intwenty.DataClient.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Intwenty.DataClient.Databases
 {
@@ -25,8 +27,7 @@ namespace Intwenty.DataClient.Databases
             ConnectionString = connectionstring;
             Options = options;
         }
-        public abstract void Open();
-        public abstract void Close();
+      
         protected abstract BaseSqlBuilder GetSqlBuilder();
 
 
@@ -41,9 +42,23 @@ namespace Intwenty.DataClient.Databases
             return CommandMap.GetCommandMap();
         }
 
+        public virtual void Open() { }
+        public virtual async Task OpenAsync() { await Task.CompletedTask;  }
+        public abstract void Close();
+        public abstract Task CloseAsync();
+        protected abstract IDbCommand GetCommand();
+        protected abstract Task<DbCommand> GetCommandAsync();
+        protected abstract DbTransaction GetTransaction();
+      
+
         public void BeginTransaction()
         {
             IsInTransaction = true;
+        }
+        public Task BeginTransactionAsync()
+        {
+            IsInTransaction = true;
+            return Task.CompletedTask;
         }
 
         public void CommitTransaction()
@@ -57,6 +72,16 @@ namespace Intwenty.DataClient.Databases
            
         }
 
+        public async Task CommitTransactionAsync()
+        {
+            var transaction = GetTransaction();
+            if (IsInTransaction && transaction != null)
+            {
+                IsInTransaction = false;
+                await transaction.CommitAsync();
+            }
+        }
+
         public void RollbackTransaction() 
         {
             var transaction = GetTransaction();
@@ -64,6 +89,16 @@ namespace Intwenty.DataClient.Databases
             {
                 IsInTransaction = false;
                 transaction.Rollback();
+            }
+        }
+
+        public async Task RollbackTransactionAsync()
+        {
+            var transaction = GetTransaction();
+            if (IsInTransaction && transaction != null)
+            {
+                IsInTransaction = false;
+                await transaction.RollbackAsync();
             }
         }
 
@@ -87,6 +122,24 @@ namespace Intwenty.DataClient.Databases
             
         }
 
+        public async Task RunCommandAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                await command.ExecuteNonQueryAsync();
+
+            }
+        }
+
         public object GetScalarValue(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             object res;
@@ -106,6 +159,28 @@ namespace Intwenty.DataClient.Databases
             }
 
  
+            return res;
+        }
+
+        public async Task<object> GetScalarValueAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            object res;
+
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = sql;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                res = await command.ExecuteScalarAsync();
+            }
+
+
             return res;
         }
 
@@ -342,11 +417,44 @@ namespace Intwenty.DataClient.Databases
           
         }
 
+        public async Task CreateTableAsync<T>()
+        {
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+
+            if (TableExists<T>())
+                return;
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = GetSqlBuilder().GetCreateTableSql(info);
+                command.CommandType = CommandType.Text;
+                await command.ExecuteNonQueryAsync();
+            }
+
+            foreach (var index in info.Indexes)
+            {
+                using (var command = await GetCommandAsync())
+                {
+                    command.CommandText = GetSqlBuilder().GetCreateIndexSql(index);
+                    command.CommandType = CommandType.Text;
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+
+
+        }
+
 
         public bool TableExists<T>()
         {
             var info = TypeDataHandler.GetDbTableDefinition<T>();
             return TableExists(info.Name);
+        }
+
+        public async Task<bool> TableExistsAsync<T>()
+        {
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+            return await TableExistsAsync(info.Name);
         }
 
         public bool TableExists(string tablename)
@@ -366,15 +474,33 @@ namespace Intwenty.DataClient.Databases
             return false;
         }
 
+        public async Task<bool> TableExistsAsync(string tablename)
+        {
+            try
+            {
+                using (var command = await GetCommandAsync())
+                {
+                    command.CommandText = string.Format("SELECT 1 FROM {0}", tablename);
+                    command.CommandType = CommandType.Text;
+                    await command.ExecuteScalarAsync();
+                }
+                return true;
+            }
+            catch { }
+
+            return false;
+        }
+
         public bool ColumnExists(string tablename, string columnname)
         {
             try
             {
-                var checkcommand = GetCommand();
-                checkcommand.CommandText = string.Format("SELECT {0} FROM {1} WHERE 1=2", columnname, tablename);
-                checkcommand.CommandType = CommandType.Text;
-                checkcommand.ExecuteScalar();
-
+                using (var checkcommand = GetCommand())
+                {
+                    checkcommand.CommandText = string.Format("SELECT {0} FROM {1} WHERE 1=2", columnname, tablename);
+                    checkcommand.CommandType = CommandType.Text;
+                    checkcommand.ExecuteScalar();
+                }
                 return true;
             }
             catch { }
@@ -382,17 +508,44 @@ namespace Intwenty.DataClient.Databases
             return false;
         }
 
+        public async Task<bool> ColumnExistsAsync(string tablename, string columnname)
+        {
+            try
+            {
+                using (var checkcommand = await GetCommandAsync())
+                {
+                    checkcommand.CommandText = string.Format("SELECT {0} FROM {1} WHERE 1=2", columnname, tablename);
+                    checkcommand.CommandType = CommandType.Text;
+                    await checkcommand.ExecuteScalarAsync();
+                }
+                return true;
+            }
+            catch { }
+
+            return false;
+        }
+
         public virtual T GetEntity<T>(int id) where T : new()
         {
-            return GetEntityInternal<T>(id);
+            return GetEntityById<T>(id);
+        }
+
+        public virtual async Task<T> GetEntityAsync<T>(int id) where T : new()
+        {
+            return await GetEntityByIdAsync<T>(id);
         }
 
         public virtual T GetEntity<T>(string id) where T : new()
         {
-            return GetEntityInternal<T>(id);
+            return GetEntityById<T>(id);
         }
 
-        private T GetEntityInternal<T>(object id) where T : new()
+        public virtual async Task<T> GetEntityAsync<T>(string id) where T : new()
+        {
+            return await GetEntityByIdAsync<T>(id);
+        }
+
+        private T GetEntityById<T>(object id) where T : new()
         {
             var res = default(T);
             var info = TypeDataHandler.GetDbTableDefinition<T>();
@@ -436,9 +589,58 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
+        private async Task<T> GetEntityByIdAsync<T>(object id) where T : new()
+        {
+            var res = default(T);
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+
+            if (info.PrimaryKeyColumnNamesList.Count == 0)
+                throw new InvalidOperationException("No primary key column found");
+            if (info.PrimaryKeyColumnNamesList.Count > 1)
+                throw new InvalidOperationException(string.Format("The table {0} uses a composite primary key", info.Name));
+
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = string.Format("SELECT * FROM {0} WHERE {1}=@P1", info.Name, info.PrimaryKeyColumnNamesList[0]);
+                command.CommandType = CommandType.Text;
+
+                AddCommandParameters(new IIntwentySqlParameter[] { new IntwentySqlParameter("@P1", id) }, command);
+
+                var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    res = new T();
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        if (reader.IsDBNull(i))
+                            continue;
+
+                        var col = info.Columns.Find(p => p.Name.ToUpper() == reader.GetName(i).ToUpper());
+                        if (col != null)
+                            SetPropertyValues(reader, new KeyValuePair<int, IntwentyDbColumnDefinition>(i, col), res);
+                    }
+
+                    break;
+
+                }
+
+                await reader.CloseAsync();
+                reader.Dispose();
+            }
+
+            return res;
+        }
+
         public virtual T GetEntity<T>(string sql, bool isprocedure) where T : new()
         {
             return GetEntity<T>(sql, isprocedure, null);
+        }
+
+        public virtual async Task<T> GetEntityAsync<T>(string sql, bool isprocedure) where T : new()
+        {
+            return await GetEntityAsync<T>(sql, isprocedure, null);
         }
 
         public virtual T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
@@ -484,7 +686,50 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-       
+        public virtual async Task<T> GetEntityAsync<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
+        {
+
+            var res = default(T);
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = sqlstmt;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    res = new T();
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        if (reader.IsDBNull(i))
+                            continue;
+
+                        var col = info.Columns.Find(p => p.Name.ToUpper() == reader.GetName(i).ToUpper());
+                        if (col != null)
+                            SetPropertyValues(reader, new KeyValuePair<int, IntwentyDbColumnDefinition>(i, col), res);
+                    }
+
+                    break;
+                }
+
+                await reader.CloseAsync();
+                reader.Dispose();
+            }
+
+            return res;
+        }
+
+
 
         public virtual List<T> GetEntities<T>() where T : new()
         {
@@ -616,15 +861,7 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        public int InsertEntity(string json, string tablename)
-        {
-            throw new NotImplementedException();
-        }
-
-        public int InsertEntity(JsonElement json, string tablename)
-        {
-            throw new NotImplementedException();
-        }
+      
 
 
         public int UpdateEntity<T>(T entity)
@@ -655,15 +892,7 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        public int UpdateEntity(string json, string tablename)
-        {
-            throw new NotImplementedException();
-        }
-
-        public int UpdateEntity(JsonElement json, string tablename)
-        {
-            throw new NotImplementedException();
-        }
+      
 
         public int DeleteEntities<T>(IEnumerable<T> entities)
         {
@@ -705,9 +934,7 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        protected abstract IDbCommand GetCommand();
-
-        protected abstract IDbTransaction GetTransaction();
+      
 
         protected virtual void SetPropertyValues<T>(IDataReader reader, KeyValuePair<int,IntwentyDbColumnDefinition> column, T instance)
         {

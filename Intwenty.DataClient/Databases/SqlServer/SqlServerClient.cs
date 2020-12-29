@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
+using System.Threading.Tasks;
 
 namespace Intwenty.DataClient.Databases.SqlServer
 {
@@ -39,6 +41,18 @@ namespace Intwenty.DataClient.Databases.SqlServer
 
         }
 
+        public override async Task CloseAsync()
+        {
+            if (connection != null && connection.State != ConnectionState.Closed)
+            {
+                await connection.CloseAsync();
+            }
+
+            connection = null;
+            transaction = null;
+            IsInTransaction = false;
+        }
+
         private SqlConnection GetConnection()
         {
 
@@ -55,6 +69,22 @@ namespace Intwenty.DataClient.Databases.SqlServer
             return connection;
         }
 
+        private async Task<SqlConnection> GetConnectionAsync()
+        {
+
+            if (connection != null && connection.State == ConnectionState.Open)
+                return connection;
+
+            connection = new SqlConnection();
+            connection.ConnectionString = this.ConnectionString;
+            await connection.OpenAsync();
+
+            if (IsInTransaction && transaction == null)
+                transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+
+            return connection;
+        }
+
         protected override IDbCommand GetCommand()
         {
             var command = new SqlCommand();
@@ -65,7 +95,18 @@ namespace Intwenty.DataClient.Databases.SqlServer
             return command;
         }
 
-        protected override IDbTransaction GetTransaction()
+        protected override async Task<DbCommand> GetCommandAsync()
+        {
+
+            var command = new SqlCommand();
+            command.Connection = await GetConnectionAsync();
+            if (IsInTransaction && transaction != null)
+                command.Transaction = transaction;
+
+            return command;
+        }
+
+        protected override DbTransaction GetTransaction()
         {
             return transaction;
         }

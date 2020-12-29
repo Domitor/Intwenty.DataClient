@@ -3,6 +3,7 @@ using Intwenty.DataClient.Model;
 using System.Collections.Generic;
 using System.Data;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Intwenty.DataClient
 {
@@ -60,18 +61,41 @@ namespace Intwenty.DataClient
         {
             InternalClient.BeginTransaction();
         }
+
+        public async Task BeginTransactionAsync()
+        {
+            await InternalClient.BeginTransactionAsync();
+        }
+
         public void CommitTransaction()
         {
             InternalClient.CommitTransaction();
         }
+
+        public async Task CommitTransactionAsync()
+        {
+            await InternalClient.CommitTransactionAsync();
+        }
+
         public void RollbackTransaction()
         {
             InternalClient.RollbackTransaction();
         }
 
+        public async Task RollbackTransactionAsync()
+        {
+            await InternalClient.RollbackTransactionAsync();
+        }
+
+
         public void Open()
         {
             InternalClient.Open();
+        }
+
+        public async Task OpenAsync()
+        {
+            await InternalClient.OpenAsync();
         }
 
         public void Close()
@@ -79,10 +103,18 @@ namespace Intwenty.DataClient
             InternalClient.Close();
         }
 
+        public async Task CloseAsync()
+        {
+            await InternalClient.CloseAsync();
+        }
 
         public void RunCommand(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             InternalClient.RunCommand(sql, isprocedure, parameters);
+        }
+        public async Task RunCommandAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            await InternalClient.RunCommandAsync(sql, isprocedure, parameters);
         }
 
         public object GetScalarValue(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
@@ -90,9 +122,19 @@ namespace Intwenty.DataClient
             return InternalClient.GetScalarValue(sql, isprocedure, parameters);
         }
 
+        public async Task<object> GetScalarValueAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            return await InternalClient.GetScalarValueAsync(sql, isprocedure, parameters);
+        }
+
         public void CreateTable<T>()
         {
             InternalClient.CreateTable<T>();
+        }
+
+        public async Task CreateTableAsync<T>()
+        {
+            await InternalClient.CreateTableAsync<T>();
         }
 
         public bool TableExists<T>()
@@ -100,25 +142,46 @@ namespace Intwenty.DataClient
             return InternalClient.TableExists<T>();
         }
 
+        public async Task<bool> TableExistsAsync<T>()
+        {
+            return await InternalClient.TableExistsAsync<T>();
+        }
+
+        public bool TableExists(string tablename)
+        {
+            return InternalClient.TableExists(tablename);
+        }
+
+        public async Task<bool> TableExistsAsync(string tablename)
+        {
+            return await InternalClient.TableExistsAsync(tablename);
+        }
+
+        public bool ColumnExists(string tablename, string columnname)
+        {
+            return InternalClient.ColumnExists(tablename, columnname);
+        }
+
+        public async Task<bool> ColumnExistsAsync(string tablename, string columnname)
+        {
+            return await InternalClient.ColumnExistsAsync(tablename, columnname);
+        }
 
         public int InsertEntity<T>(T model)
         {
             return InternalClient.InsertEntity(model);
         }
 
-        public int InsertEntity(string json, string tablename)
-        {
-            return InternalClient.InsertEntity(json, tablename);
-        }
-
-        public int InsertEntity(JsonElement json, string tablename)
-        {
-            return InternalClient.InsertEntity(json, tablename);
-        }
+     
 
         public T GetEntity<T>(string id) where T : new()
         {
             return InternalClient.GetEntity<T>(id);
+        }
+
+        public async Task<T> GetEntityAsync<T>(string id) where T : new()
+        {
+            return await InternalClient.GetEntityAsync<T>(id);
         }
 
         public T GetEntity<T>(int id) where T : new()
@@ -126,14 +189,29 @@ namespace Intwenty.DataClient
             return InternalClient.GetEntity<T>(id);
         }
 
+        public async Task<T> GetEntityAsync<T>(int id) where T : new()
+        {
+            return await InternalClient.GetEntityAsync<T>(id);
+        }
+
         public T GetEntity<T>(string sql, bool isprocedure) where T : new()
         {
             return InternalClient.GetEntity<T>(sql, isprocedure);
         }
 
+        public async Task<T> GetEntityAsync<T>(string sql, bool isprocedure) where T : new()
+        {
+            return await InternalClient.GetEntityAsync<T>(sql, isprocedure);
+        }
+
         public T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
         {
             return InternalClient.GetEntity<T>(sql, isprocedure, parameters);
+        }
+
+        public async Task<T> GetEntityAsync<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new()
+        {
+            return await InternalClient.GetEntityAsync<T>(sql, isprocedure, parameters);
         }
 
         public List<T> GetEntities<T>() where T : new()
@@ -171,30 +249,14 @@ namespace Intwenty.DataClient
             return InternalClient.GetObjects(sql, isprocedure, parameters);
         }
 
-        public bool TableExists(string tablename)
-        {
-            return InternalClient.TableExists(tablename);
-        }
-
-        public bool ColumnExists(string tablename, string columnname)
-        {
-            return InternalClient.ColumnExists(tablename, columnname);
-        }
+      
 
         public int UpdateEntity<T>(T entity)
         {
             return InternalClient.UpdateEntity(entity);
         }
 
-        public int UpdateEntity(string json, string tablename)
-        {
-            return InternalClient.UpdateEntity(json, tablename);
-        }
-
-        public int UpdateEntity(JsonElement json, string tablename)
-        {
-            return InternalClient.UpdateEntity(json, tablename);
-        }
+      
 
         public int DeleteEntity<T>(T entity)
         {

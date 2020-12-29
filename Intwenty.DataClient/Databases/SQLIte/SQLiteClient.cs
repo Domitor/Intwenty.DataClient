@@ -3,7 +3,8 @@ using System.Data;
 using Intwenty.DataClient.Model;
 using System;
 using System.Collections.Generic;
-
+using System.Threading.Tasks;
+using System.Data.Common;
 
 namespace Intwenty.DataClient.Databases.SQLite
 {
@@ -20,7 +21,8 @@ namespace Intwenty.DataClient.Databases.SQLite
 
         public override DBMS Database { get { return DBMS.SQLite; } }
 
-     
+
+        
         public override void Close()
         {
             if (connection != null && connection.State != ConnectionState.Closed)
@@ -32,6 +34,18 @@ namespace Intwenty.DataClient.Databases.SQLite
             transaction = null;
             IsInTransaction = false;
 
+        }
+
+        public override async Task CloseAsync()
+        {
+            if (connection != null && connection.State != ConnectionState.Closed)
+            {
+                await connection.CloseAsync();
+            }
+
+            connection = null;
+            transaction = null;
+            IsInTransaction = false;
         }
 
         private SQLiteConnection GetConnection()
@@ -50,6 +64,22 @@ namespace Intwenty.DataClient.Databases.SQLite
             return connection;
         }
 
+        private async Task<SQLiteConnection> GetConnectionAsync()
+        {
+
+            if (connection != null && connection.State == ConnectionState.Open)
+                return connection;
+
+            connection = new SQLiteConnection();
+            connection.ConnectionString = this.ConnectionString;
+            await connection.OpenAsync();
+
+            if (IsInTransaction && transaction == null)
+                transaction = (SQLiteTransaction)await connection.BeginTransactionAsync();
+
+            return connection;
+        }
+
         protected override IDbCommand GetCommand()
         {
 
@@ -61,7 +91,18 @@ namespace Intwenty.DataClient.Databases.SQLite
             return command;
         }
 
-        protected override IDbTransaction GetTransaction()
+        protected override async Task<DbCommand> GetCommandAsync()
+        {
+
+            var command = new SQLiteCommand();
+            command.Connection = await GetConnectionAsync();
+            if (IsInTransaction && transaction != null)
+                command.Transaction = transaction;
+
+            return command;
+        }
+
+        protected override DbTransaction GetTransaction()
         {
             return transaction;
         }
@@ -104,11 +145,10 @@ namespace Intwenty.DataClient.Databases.SQLite
             return new SqlLiteBuilder();
         }
 
-        public override void Open()
-        {
-            
-        }
-
       
+
+       
+
+
     }
 }

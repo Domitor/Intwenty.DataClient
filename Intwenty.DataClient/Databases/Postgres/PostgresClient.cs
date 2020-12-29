@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Threading.Tasks;
 using Intwenty.DataClient.Model;
 using Npgsql;
 
@@ -37,6 +39,18 @@ namespace Intwenty.DataClient.Databases.Postgres
             IsInTransaction = false;
         }
 
+        public override async Task CloseAsync()
+        {
+            if (connection != null && connection.State != ConnectionState.Closed)
+            {
+                await connection.CloseAsync();
+            }
+
+            connection = null;
+            transaction = null;
+            IsInTransaction = false;
+        }
+
         private NpgsqlConnection GetConnection()
         {
 
@@ -53,6 +67,22 @@ namespace Intwenty.DataClient.Databases.Postgres
             return connection;
         }
 
+        private async Task<NpgsqlConnection> GetConnectionAsync()
+        {
+
+            if (connection != null && connection.State == ConnectionState.Open)
+                return connection;
+
+            connection = new NpgsqlConnection();
+            connection.ConnectionString = this.ConnectionString;
+            await connection.OpenAsync();
+
+            if (IsInTransaction && transaction == null)
+                transaction = await connection.BeginTransactionAsync();
+
+            return connection;
+        }
+
         protected override IDbCommand GetCommand()
         {
             var command = new NpgsqlCommand();
@@ -63,7 +93,18 @@ namespace Intwenty.DataClient.Databases.Postgres
             return command;
         }
 
-        protected override IDbTransaction GetTransaction()
+        protected override async Task<DbCommand> GetCommandAsync()
+        {
+
+            var command = new NpgsqlCommand();
+            command.Connection = await GetConnectionAsync();
+            if (IsInTransaction && transaction != null)
+                command.Transaction = transaction;
+
+            return command;
+        }
+
+        protected override DbTransaction GetTransaction()
         {
             return transaction;
         }
