@@ -11,8 +11,8 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Domitor/Intwenty.DataClient</RepositoryUrl>
     <PackageIcon>intwenty_loggo_small.png</PackageIcon>
-    <Version>1.0.9</Version>
-    <PackageReleaseNotes>- Fix: GetEntity should return null on no result</PackageReleaseNotes>
+    <Version>1.1.0</Version>
+    <PackageReleaseNotes>- Introduced async versions of methods in IDataClient</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
