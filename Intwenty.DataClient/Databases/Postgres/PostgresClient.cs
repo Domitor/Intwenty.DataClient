@@ -22,11 +22,6 @@ namespace Intwenty.DataClient.Databases.Postgres
         public override DBMS Database { get { return DBMS.PostgreSQL; } }
 
 
-        public override void Open()
-        {
-
-        }
-
         public override void Close()
         {
             if (connection != null && connection.State != ConnectionState.Closed)

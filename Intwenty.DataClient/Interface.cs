@@ -21,8 +21,6 @@ namespace Intwenty.DataClient
         Task CommitTransactionAsync();
         void RollbackTransaction();
         Task RollbackTransactionAsync();
-
-
         void CreateTable<T>();
         Task CreateTableAsync<T>();
         bool TableExists<T>();
@@ -31,14 +29,10 @@ namespace Intwenty.DataClient
         Task<bool> TableExistsAsync(string tablename);
         bool ColumnExists(string tablename, string columnname);
         Task<bool> ColumnExistsAsync(string tablename, string columnname);
-
-
         void RunCommand(string sql, bool isprocedure=false, IIntwentySqlParameter[] parameters=null);
         Task RunCommandAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         object GetScalarValue(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         Task<object> GetScalarValueAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
-
-
         T GetEntity<T>(string id) where T : new();
         Task<T> GetEntityAsync<T>(string id) where T : new();
         T GetEntity<T>(int id) where T : new();
@@ -47,29 +41,32 @@ namespace Intwenty.DataClient
         Task<T> GetEntityAsync<T>(string sql, bool isprocedure) where T : new();
         T GetEntity<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new();
         Task<T> GetEntityAsync<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new();
-
-
         List<T> GetEntities<T>() where T : new();
         Task<List<T>> GetEntitiesAsync<T>() where T : new();
         List<T> GetEntities<T>(string sql, bool isprocedure=false) where T : new();
         Task<List<T>> GetEntitiesAsync<T>(string sql, bool isprocedure = false) where T : new();
         List<T> GetEntities<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters=null) where T : new();
         Task<List<T>> GetEntitiesAsync<T>(string sql, bool isprocedure, IIntwentySqlParameter[] parameters = null) where T : new();
-
         IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
+        Task<IJsonObjectResult> GetJsonObjectAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
+        Task<IJsonArrayResult> GetJsonArrayAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         dynamic GetObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
+        Task<dynamic> GetObjectAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         List<dynamic> GetObjects(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
+        Task<List<dynamic>> GetObjectsAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
+        Task<IResultSet> GetResultSetAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
-
-
+        Task<DataTable> GetDataTableAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         int InsertEntity<T>(T entity);
+        Task<int> InsertEntityAsync<T>(T entity);
         int UpdateEntity<T>(T entity);
+        Task<int> UpdateEntityAsync<T>(T entity);
         int DeleteEntity<T>(T entity);
+        Task<int> DeleteEntityAsync<T>(T entity);
         int DeleteEntities<T>(IEnumerable<T> entities);
-
-
+        Task<int> DeleteEntitiesAsync<T>(IEnumerable<T> entities);
         List<TypeMapItem> GetDbTypeMap();
         List<CommandMapItem> GetDbCommandMap();
     }

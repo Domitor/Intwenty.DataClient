@@ -22,12 +22,6 @@ namespace Intwenty.DataClient.Databases.SqlServer
         public override DBMS Database { get { return DBMS.MSSqlServer; } }
 
        
-
-        public override void Open()
-        {
-
-        }
-
         public override void Close()
         {
             if (connection != null && connection.State != ConnectionState.Closed)

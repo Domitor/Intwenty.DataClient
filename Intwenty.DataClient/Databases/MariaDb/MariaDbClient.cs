@@ -24,11 +24,6 @@ namespace Intwenty.DataClient.Databases.MariaDb
         public override DBMS Database { get { return DBMS.MariaDB; } }
 
 
-        public override void Open()
-        {
-            
-        }
-
         public override void Close()
         {
             if (connection != null && connection.State != ConnectionState.Closed)

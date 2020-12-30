@@ -3,68 +3,85 @@ using Intwenty.DataClient.Reflection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Threading.Tasks;
 
 namespace DataClientTests
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Console.WriteLine("Running tests...");
-            Tests();
+            Console.WriteLine("###########################");
+            Console.WriteLine("Running synchronous test...");
+            RunSynchTest();
+            Console.WriteLine("");
+            Console.WriteLine("###########################");
+            Console.WriteLine("Running asynchronous test...");
+            await RunAsynchTest();
+            Console.WriteLine("Tests finnished");
             Console.ReadLine();
 
         }
 
-        private static void Tests()
+        private static void RunSynchTest()
         {
+            var start = DateTime.Now;
             var client = new Connection(DBMS.MariaDB, @"Server=127.0.0.1;Database=IntwentyDb;uid=root;Password=xxxxx");
             client.Open();
 
             try
             {
 
-                if (client.TableExists("DataClient_TestTable"))
-                    client.RunCommand("DROP TABLE DataClient_TestTable");
+                if (client.TableExists("DataClient_SyncTestTable"))
+                    client.RunCommand("DROP TABLE DataClient_SyncTestTable");
 
-                client.CreateTable<DataClientTest>();
+                client.CreateTable<DataClientSyncTest>();
 
-                for (int i = 0; i < 100; i++)
-                    client.InsertEntity(new DataClientTest() { Name = "Dog " + i, BirthDate = DateTime.Now, DtOffset = DateTime.Now, TestValue = 2.34F });
+                var tmpstart = DateTime.Now;
+                for (int i = 0; i < 5000; i++)
+                    client.InsertEntity(new DataClientSyncTest() { Name = "Dog " + i, BirthDate = DateTime.Now, DtOffset = DateTime.Now, TestValue = 2.34F });
 
-                var t = client.GetEntities<DataClientTest>();
+                Console.WriteLine("Insert 5000 took: " + DateTime.Now.Subtract(tmpstart).TotalMilliseconds + " ms");
 
+                var t = client.GetEntities<DataClientSyncTest>();
+
+                tmpstart = DateTime.Now;
                 foreach (var q in t)
                 {
-                    var s = client.GetEntity<DataClientTest>(q.Id);
+                    var s = client.GetEntity<DataClientSyncTest>(q.Id);
                     s.Name = "Test " + q.Id;
                     s.TestValue = 777.77F;
                     s.DtOffset = null;
                     s.BirthDate = null;
                     client.UpdateEntity(s);
-
                 }
+                Console.WriteLine("Update 5000 took: " + DateTime.Now.Subtract(tmpstart).TotalMilliseconds + " ms");
 
-                var nulltest = client.GetEntity<DataClientTest>(678234);
+                var nulltest = client.GetEntity<DataClientSyncTest>(678234);
 
-                t = client.GetEntities<DataClientTest>();
+                t = client.GetEntities<DataClientSyncTest>();
 
-                t = client.GetEntities<DataClientTest>("select Name from DataClient_TestTable", false);
+                t = client.GetEntities<DataClientSyncTest>("select Name from DataClient_SyncTestTable", false);
 
-                t = client.GetEntities<DataClientTest>();
+                t = client.GetEntities<DataClientSyncTest>();
 
-                var jsonarr = client.GetJsonArray("select id as \"Id\", name as \"Name\", testvalue as \"TestValue\" from DataClient_TestTable");
+                var jsonarr = client.GetJsonArray("select id as \"Id\", name as \"Name\", testvalue as \"TestValue\" from DataClient_SyncTestTable");
 
-                var objlist = client.GetObjects("select * from DataClient_TestTable");
+                var objlist = client.GetObjects("select * from DataClient_SyncTestTable");
 
-                var resultset = client.GetResultSet("select * from DataClient_TestTable");
+                var resultset = client.GetResultSet("select * from DataClient_SyncTestTable");
 
-                var json = client.GetJsonObject("select Name, TestValue from DataClient_TestTable");
+                var json = client.GetJsonObject("select Name, TestValue from DataClient_SyncTestTable");
 
-                var typedresult = client.GetEntity<DataClientTest>("select Name, TestValue from DataClient_TestTable", false);
+                var typedresult = client.GetEntity<DataClientSyncTest>("select Name, TestValue from DataClient_SyncTestTable", false);
 
-                var typedresult2 = client.GetEntity<DataClientTest>(t[5].Id);
+                var typedresult2 = client.GetEntity<DataClientSyncTest>(t[5].Id);
 
+                tmpstart = DateTime.Now;
+                client.DeleteEntities(t);
+                Console.WriteLine("Delete 5000 took: " + DateTime.Now.Subtract(tmpstart).TotalMilliseconds + " ms");
+
+                Console.WriteLine("Sync test lasted: " + DateTime.Now.Subtract(start).TotalMilliseconds + " ms");
 
             }
             catch (Exception ex)
@@ -77,13 +94,84 @@ namespace DataClientTests
             }
         }
 
-     
+        private static async Task RunAsynchTest()
+        {
+            var start = DateTime.Now;
+            var client = new Connection(DBMS.MariaDB, @"Server=127.0.0.1;Database=IntwentyDb;uid=root;Password=xxxxx");
+            await client.OpenAsync();
+
+            try
+            {
+
+                if (await client.TableExistsAsync("DataClient_AsyncTestTable"))
+                    await client.RunCommandAsync("DROP TABLE DataClient_AsyncTestTable");
+
+                await client.CreateTableAsync<DataClientAsyncTest>();
+
+                var tmpstart = DateTime.Now;
+                for (int i = 0; i < 5000; i++)
+                    await client.InsertEntityAsync(new DataClientAsyncTest() { Name = "Dog " + i, BirthDate = DateTime.Now, DtOffset = DateTime.Now, TestValue = 2.34F });
+
+                Console.WriteLine("Insert 5000 took: " + DateTime.Now.Subtract(tmpstart).TotalMilliseconds + " ms");
+
+                var t = await client.GetEntitiesAsync<DataClientAsyncTest>();
+
+                tmpstart = DateTime.Now;
+                foreach (var q in t)
+                {
+                    var s = await client.GetEntityAsync<DataClientAsyncTest>(q.Id);
+                    s.Name = "Test " + q.Id;
+                    s.TestValue = 777.77F;
+                    s.DtOffset = null;
+                    s.BirthDate = null;
+                    client.UpdateEntity(s);
+
+                }
+                Console.WriteLine("Update 5000 took: " + DateTime.Now.Subtract(tmpstart).TotalMilliseconds + " ms");
+
+                var nulltest = await client.GetEntityAsync<DataClientAsyncTest>(678234);
+
+                t = await client.GetEntitiesAsync<DataClientAsyncTest>();
+
+                t = await client.GetEntitiesAsync<DataClientAsyncTest>("select Name from DataClient_AsyncTestTable", false);
+
+                t = await client.GetEntitiesAsync<DataClientAsyncTest>();
+
+                var jsonarr = await client.GetJsonArrayAsync("select id as \"Id\", name as \"Name\", testvalue as \"TestValue\" from DataClient_AsyncTestTable");
+
+                var objlist = await client.GetObjectsAsync("select * from DataClient_AsyncTestTable");
+
+                var resultset = await client.GetResultSetAsync("select * from DataClient_AsyncTestTable");
+
+                var json = await client.GetJsonObjectAsync("select Name, TestValue from DataClient_AsyncTestTable");
+
+                var typedresult = await client.GetEntityAsync<DataClientAsyncTest>("select Name, TestValue from DataClient_AsyncTestTable", false);
+
+                var typedresult2 = await client.GetEntityAsync<DataClientAsyncTest>(t[5].Id);
+
+                tmpstart = DateTime.Now;
+                await client.DeleteEntitiesAsync(t);
+                Console.WriteLine("Delete 5000 took: " + DateTime.Now.Subtract(tmpstart).TotalMilliseconds + " ms");
+
+                Console.WriteLine("Async test lasted: " + DateTime.Now.Subtract(start).TotalMilliseconds + " ms");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            finally
+            {
+                client.Close();
+            }
+        }
+
+
     }
 
 
     [DbTablePrimaryKey("Id")]
-    [DbTableName("DataClient_TestTable")]
-    public class DataClientTest
+    [DbTableName("DataClient_SyncTestTable")]
+    public class DataClientSyncTest
     {
         [AutoIncrement]
         public int Id { get; set; }
@@ -96,7 +184,7 @@ namespace DataClientTests
         public string StringField { get; set; }
 
         [Ignore]
-        public List<DataClientTest> ListField { get; set; }
+        public List<DataClientSyncTest> ListField { get; set; }
 
         public DateTimeOffset? DtOffset { get; set; }
 
@@ -106,6 +194,31 @@ namespace DataClientTests
 
     }
 
-   
+    [DbTablePrimaryKey("Id")]
+    [DbTableName("DataClient_AsyncTestTable")]
+    public class DataClientAsyncTest
+    {
+        [AutoIncrement]
+        public int Id { get; set; }
+
+        public string Name { get; set; }
+
+        public DateTime? BirthDate { get; set; }
+
+        [Ignore]
+        public string StringField { get; set; }
+
+        [Ignore]
+        public List<DataClientAsyncTest> ListField { get; set; }
+
+        public DateTimeOffset? DtOffset { get; set; }
+
+        public float? TestValue { get; set; }
+
+
+
+    }
+
+
 
 }

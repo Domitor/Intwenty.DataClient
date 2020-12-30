@@ -30,8 +30,6 @@ namespace Intwenty.DataClient.Databases
       
         protected abstract BaseSqlBuilder GetSqlBuilder();
 
-
-
         public List<TypeMapItem> GetDbTypeMap()
         {
             return TypeMap.GetTypeMap();
@@ -42,8 +40,8 @@ namespace Intwenty.DataClient.Databases
             return CommandMap.GetCommandMap();
         }
 
-        public virtual void Open() { }
-        public virtual async Task OpenAsync() { await Task.CompletedTask;  }
+        public void Open() { }
+        public async Task OpenAsync() { await Task.CompletedTask;  }
         public abstract void Close();
         public abstract Task CloseAsync();
         protected abstract IDbCommand GetCommand();
@@ -61,7 +59,7 @@ namespace Intwenty.DataClient.Databases
             return Task.CompletedTask;
         }
 
-        public void CommitTransaction()
+        public virtual void CommitTransaction()
         {
             var transaction = GetTransaction();
             if (IsInTransaction && transaction != null)
@@ -72,7 +70,7 @@ namespace Intwenty.DataClient.Databases
            
         }
 
-        public async Task CommitTransactionAsync()
+        public virtual async Task CommitTransactionAsync()
         {
             var transaction = GetTransaction();
             if (IsInTransaction && transaction != null)
@@ -82,7 +80,7 @@ namespace Intwenty.DataClient.Databases
             }
         }
 
-        public void RollbackTransaction() 
+        public virtual void RollbackTransaction() 
         {
             var transaction = GetTransaction();
             if (IsInTransaction && transaction != null)
@@ -92,7 +90,7 @@ namespace Intwenty.DataClient.Databases
             }
         }
 
-        public async Task RollbackTransactionAsync()
+        public virtual async Task RollbackTransactionAsync()
         {
             var transaction = GetTransaction();
             if (IsInTransaction && transaction != null)
@@ -103,7 +101,7 @@ namespace Intwenty.DataClient.Databases
         }
 
 
-        public void RunCommand(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        public virtual void RunCommand(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
            
             using (var command = GetCommand())
@@ -122,7 +120,7 @@ namespace Intwenty.DataClient.Databases
             
         }
 
-        public async Task RunCommandAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        public virtual async Task RunCommandAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
 
             using (var command = await GetCommandAsync())
@@ -140,7 +138,7 @@ namespace Intwenty.DataClient.Databases
             }
         }
 
-        public object GetScalarValue(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        public virtual object GetScalarValue(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             object res;
 
@@ -162,7 +160,7 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        public async Task<object> GetScalarValueAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        public virtual async Task<object> GetScalarValueAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             object res;
 
@@ -184,7 +182,7 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        public dynamic GetObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        public virtual dynamic GetObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             object result = null;
 
@@ -215,7 +213,38 @@ namespace Intwenty.DataClient.Databases
             return result;
         }
 
-        public IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        public virtual async Task<dynamic> GetObjectAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            object result = null;
+
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = sqlstmt;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    result = GetObject(reader);
+                    break;
+                }
+
+                await reader.CloseAsync();
+                await reader.DisposeAsync();
+            }
+
+            return result;
+        }
+
+        public virtual IJsonObjectResult GetJsonObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             JsonObjectResult result = null;
 
@@ -251,7 +280,43 @@ namespace Intwenty.DataClient.Databases
             return result;
         }
 
-        public List<dynamic> GetObjects(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        public virtual async Task<IJsonObjectResult> GetJsonObjectAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            JsonObjectResult result = null;
+
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = sqlstmt;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    result = GetJsonObjectResult(reader);
+                    break;
+                }
+
+                await reader.CloseAsync();
+                await reader.DisposeAsync();
+
+            }
+
+            if (result == null)
+                result = new JsonObjectResult();
+
+
+            return result;
+        }
+
+        public virtual List<dynamic> GetObjects(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             var res = new List<dynamic>();
 
@@ -281,7 +346,37 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        public IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        public virtual async Task<List<dynamic>> GetObjectsAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            var res = new List<dynamic>();
+
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = sqlstmt;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    res.Add(GetObject(reader));
+                }
+
+                await reader.CloseAsync();
+                await reader.DisposeAsync();
+            }
+
+            return res;
+        }
+
+        public virtual IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             var start = DateTime.Now;
             var result = new JsonArrayResult();
@@ -317,7 +412,43 @@ namespace Intwenty.DataClient.Databases
             return result;
         }
 
-        public IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        public virtual async Task<IJsonArrayResult> GetJsonArrayAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            var start = DateTime.Now;
+            var result = new JsonArrayResult();
+
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = sqlstmt;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    result.JsonObjects.Add(GetJsonObjectResult(reader));
+
+                }
+
+                await reader.CloseAsync();
+                await reader.DisposeAsync();
+
+            }
+            result.Duration = DateTime.Now.Subtract(start).TotalMilliseconds;
+            result.ObjectCount = result.JsonObjects.Count;
+
+
+            return result;
+        }
+
+        public virtual IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             var res = new ResultSet();
 
@@ -362,7 +493,52 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        public DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        public virtual async Task<IResultSet> GetResultSetAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            var res = new ResultSet();
+
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = sqlstmt;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+
+                    var row = new ResultSetRow();
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        if (reader.IsDBNull(i) && Options.JsonNullValueHandling == JsonNullValueMode.Exclude)
+                            continue;
+
+                        if (reader.IsDBNull(i))
+                            row.SetValue(reader.GetName(i), null);
+                        else
+                            row.SetValue(reader.GetName(i), reader.GetValue(i));
+
+                    }
+                    res.Rows.Add(row);
+
+                }
+
+                await reader.CloseAsync();
+                await reader.DisposeAsync();
+            }
+
+
+            return res;
+        }
+
+        public virtual DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             var table = new DataTable();
 
@@ -390,7 +566,35 @@ namespace Intwenty.DataClient.Databases
             return table;
         }
 
-        public void CreateTable<T>()
+        public virtual async Task<DataTable> GetDataTableAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            var table = new DataTable();
+
+            var sqlstmt = GetSqlBuilder().GetModifiedSelectStatement(sql);
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = sqlstmt;
+                if (isprocedure)
+                    command.CommandType = CommandType.StoredProcedure;
+                else
+                    command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters, command);
+
+                var reader = await command.ExecuteReaderAsync();
+
+                table.Load(reader);
+
+                await reader.CloseAsync();
+                await reader.DisposeAsync();
+
+            }
+
+            return table;
+        }
+
+        public virtual void CreateTable<T>()
         {
             var info = TypeDataHandler.GetDbTableDefinition<T>();
 
@@ -417,7 +621,7 @@ namespace Intwenty.DataClient.Databases
           
         }
 
-        public async Task CreateTableAsync<T>()
+        public virtual async Task CreateTableAsync<T>()
         {
             var info = TypeDataHandler.GetDbTableDefinition<T>();
 
@@ -445,19 +649,19 @@ namespace Intwenty.DataClient.Databases
         }
 
 
-        public bool TableExists<T>()
+        public virtual bool TableExists<T>()
         {
             var info = TypeDataHandler.GetDbTableDefinition<T>();
             return TableExists(info.Name);
         }
 
-        public async Task<bool> TableExistsAsync<T>()
+        public virtual async Task<bool> TableExistsAsync<T>()
         {
             var info = TypeDataHandler.GetDbTableDefinition<T>();
             return await TableExistsAsync(info.Name);
         }
 
-        public bool TableExists(string tablename)
+        public virtual bool TableExists(string tablename)
         {
             try
             {
@@ -474,7 +678,7 @@ namespace Intwenty.DataClient.Databases
             return false;
         }
 
-        public async Task<bool> TableExistsAsync(string tablename)
+        public virtual async Task<bool> TableExistsAsync(string tablename)
         {
             try
             {
@@ -491,7 +695,7 @@ namespace Intwenty.DataClient.Databases
             return false;
         }
 
-        public bool ColumnExists(string tablename, string columnname)
+        public virtual bool ColumnExists(string tablename, string columnname)
         {
             try
             {
@@ -508,7 +712,7 @@ namespace Intwenty.DataClient.Databases
             return false;
         }
 
-        public async Task<bool> ColumnExistsAsync(string tablename, string columnname)
+        public virtual async Task<bool> ColumnExistsAsync(string tablename, string columnname)
         {
             try
             {
@@ -545,7 +749,7 @@ namespace Intwenty.DataClient.Databases
             return await GetEntityByIdAsync<T>(id);
         }
 
-        private T GetEntityById<T>(object id) where T : new()
+        protected virtual T GetEntityById<T>(object id) where T : new()
         {
             var res = default(T);
             var info = TypeDataHandler.GetDbTableDefinition<T>();
@@ -589,7 +793,7 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        private async Task<T> GetEntityByIdAsync<T>(object id) where T : new()
+        protected virtual async Task<T> GetEntityByIdAsync<T>(object id) where T : new()
         {
             var res = default(T);
             var info = TypeDataHandler.GetDbTableDefinition<T>();
@@ -969,10 +1173,33 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-      
+        public virtual async Task<int> InsertEntityAsync<T>(T entity)
+        {
+            if (entity == null)
+                return 0;
+
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+            var parameters = new List<IntwentySqlParameter>();
+            int res;
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = GetSqlBuilder().GetInsertSql(info, entity, parameters);
+                command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters.ToArray(), command);
+
+                res = await command.ExecuteNonQueryAsync();
+
+                InferAutoIncrementalValue(info, parameters, entity, command);
+
+            }
+
+            return res;
+        }
 
 
-        public int UpdateEntity<T>(T entity)
+        public virtual int UpdateEntity<T>(T entity)
         {
             if (entity == null)
                 return 0;
@@ -1000,9 +1227,38 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-      
+        public virtual async Task<int> UpdateEntityAsync<T>(T entity)
+        {
+            if (entity == null)
+                return 0;
 
-        public int DeleteEntities<T>(IEnumerable<T> entities)
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+            var parameters = new List<IntwentySqlParameter>();
+            var keyparameters = new List<IntwentySqlParameter>();
+            int res;
+
+            var sql = GetSqlBuilder().GetUpdateSql(info, entity, parameters, keyparameters);
+            if (keyparameters.Count == 0)
+                throw new InvalidOperationException("Can't update a table without 'Primary Key' or an 'Auto Increment' column, please use annotations.");
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = sql;
+                command.CommandType = CommandType.Text;
+
+                AddCommandParameters(keyparameters.ToArray(), command);
+                AddCommandParameters(parameters.ToArray(), command);
+
+                res = await command.ExecuteNonQueryAsync();
+            }
+
+            return res;
+        }
+
+
+
+
+        public virtual int DeleteEntities<T>(IEnumerable<T> entities)
         {
             if (entities == null)
                 return 0;
@@ -1015,7 +1271,20 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-        public int DeleteEntity<T>(T entity)
+        public virtual async Task<int> DeleteEntitiesAsync<T>(IEnumerable<T> entities)
+        {
+            if (entities == null)
+                return 0;
+
+            var res = 0;
+            foreach (var t in entities)
+            {
+                res += await DeleteEntityAsync(t);
+            }
+            return res;
+        }
+
+        public virtual int DeleteEntity<T>(T entity)
         {
             if (entity == null)
                 return 0;
@@ -1042,7 +1311,34 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
-      
+        public virtual async Task<int> DeleteEntityAsync<T>(T entity)
+        {
+            if (entity == null)
+                return 0;
+
+            int res;
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+            var parameters = new List<IntwentySqlParameter>();
+
+            var sql = GetSqlBuilder().GetDeleteSql(info, entity, parameters);
+            if (parameters.Count == 0)
+                throw new InvalidOperationException("Can't delete rows in a table without 'Primary Key' or an 'Auto Increment' column, please use annotations.");
+
+            using (var command = await GetCommandAsync())
+            {
+                command.CommandText = sql;
+                command.CommandType = CommandType.Text;
+
+                AddCommandParameters(parameters.ToArray(), command);
+
+                res = await command.ExecuteNonQueryAsync();
+            }
+
+
+            return res;
+        }
+
+
 
         protected virtual void SetPropertyValues<T>(IDataReader reader, KeyValuePair<int,IntwentyDbColumnDefinition> column, T instance)
         {
@@ -1091,12 +1387,9 @@ namespace Intwenty.DataClient.Databases
 
         }
 
-        protected string GetJSONNullValue(string name)
-        {
-            return "\"" + name + "\":null";
-        }
+       
 
-        protected bool IsNumeric(string datatypename)
+        protected virtual bool IsNumeric(string datatypename)
         {
 
             if (datatypename.ToUpper().Contains("NUMERIC"))
@@ -1114,7 +1407,7 @@ namespace Intwenty.DataClient.Databases
             return false;
         }
 
-        protected bool IsDateTime(string datatypename)
+        protected virtual bool IsDateTime(string datatypename)
         {
 
             if (datatypename.ToUpper() == "TIMESTAMP")
@@ -1127,7 +1420,11 @@ namespace Intwenty.DataClient.Databases
             return false;
         }
 
-    
+        private string GetJSONNullValue(string name)
+        {
+            return "\"" + name + "\":null";
+        }
+
         private JsonObjectResult GetJsonObjectResult(IDataReader openreader)
         {
             var result = new JsonObjectResult();

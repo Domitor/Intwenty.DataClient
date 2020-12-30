@@ -167,13 +167,7 @@ namespace Intwenty.DataClient
             return await InternalClient.ColumnExistsAsync(tablename, columnname);
         }
 
-        public int InsertEntity<T>(T model)
-        {
-            return InternalClient.InsertEntity(model);
-        }
-
-     
-
+  
         public T GetEntity<T>(string id) where T : new()
         {
             return InternalClient.GetEntity<T>(id);
@@ -249,48 +243,92 @@ namespace Intwenty.DataClient
             return InternalClient.GetJsonObject(sql,isprocedure,parameters);
         }
 
+        public async Task<IJsonObjectResult> GetJsonObjectAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            return await InternalClient.GetJsonObjectAsync(sql, isprocedure, parameters);
+        }
+
         public dynamic GetObject(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             return InternalClient.GetObject(sql, isprocedure, parameters);
         }
-
+        public async Task<dynamic> GetObjectAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            return await InternalClient.GetObjectAsync(sql, isprocedure, parameters);
+        }
         public IJsonArrayResult GetJsonArray(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             return InternalClient.GetJsonArray(sql, isprocedure, parameters);
         }
-
+        public async Task<IJsonArrayResult> GetJsonArrayAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            return await InternalClient.GetJsonArrayAsync(sql, isprocedure, parameters);
+        }
         public List<dynamic> GetObjects(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             return InternalClient.GetObjects(sql, isprocedure, parameters);
         }
+        public async Task<List<dynamic>> GetObjectsAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            return await InternalClient.GetObjectsAsync(sql, isprocedure, parameters);
+        }
 
-      
+
+        public int InsertEntity<T>(T model)
+        {
+            return InternalClient.InsertEntity(model);
+        }
+        public async Task<int> InsertEntityAsync<T>(T model)
+        {
+            return await InternalClient.InsertEntityAsync(model);
+        }
 
         public int UpdateEntity<T>(T entity)
         {
             return InternalClient.UpdateEntity(entity);
         }
+        public async Task<int> UpdateEntityAsync<T>(T entity)
+        {
+            return await InternalClient.UpdateEntityAsync(entity);
+        }
 
-      
 
         public int DeleteEntity<T>(T entity)
         {
             return InternalClient.DeleteEntity(entity);
         }
 
+        public async Task<int> DeleteEntityAsync<T>(T entity)
+        {
+            return await InternalClient.DeleteEntityAsync(entity);
+        }
+
         public int DeleteEntities<T>(IEnumerable<T> entities)
         {
             return InternalClient.DeleteEntities(entities);
+        }
+        public async Task<int> DeleteEntitiesAsync<T>(IEnumerable<T> entities)
+        {
+            return await InternalClient.DeleteEntitiesAsync(entities);
         }
 
         public IResultSet GetResultSet(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             return InternalClient.GetResultSet(sql, isprocedure, parameters);
         }
+        public async Task<IResultSet> GetResultSetAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            return await InternalClient.GetResultSetAsync(sql, isprocedure, parameters);
+        }
 
         public DataTable GetDataTable(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
         {
             return InternalClient.GetDataTable(sql,isprocedure, parameters);
+        }
+
+        public async Task<DataTable> GetDataTableAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null)
+        {
+            return await InternalClient.GetDataTableAsync(sql, isprocedure, parameters);
         }
 
         public List<TypeMapItem> GetDbTypeMap()
