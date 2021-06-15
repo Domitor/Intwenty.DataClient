@@ -23,6 +23,7 @@ namespace DataClientTests
 
         }
 
+
         private static void RunSynchTest()
         {
             var start = DateTime.Now;
@@ -35,6 +36,17 @@ namespace DataClientTests
                 if (client.TableExists("DataClient_SyncTestTable"))
                     client.RunCommand("DROP TABLE DataClient_SyncTestTable");
 
+                for (int i = 0; i < 10; i++)
+                {
+                    var ent = new DataClientSyncTest() { Name = "Dog " + i, BirthDate = DateTime.Now, DtOffset = DateTime.Now, TestValue = 2.34F };
+                    var s = client.GetCreateTableSqlStatement<DataClientSyncTest>();
+                    Console.WriteLine(s);
+                    s = client.GetInsertSqlStatement(ent);
+                    Console.WriteLine(s);
+                    s = client.GetUpdateSqlStatement(ent);
+                    Console.WriteLine(s);
+                    System.Threading.Thread.Sleep(5000);
+                }
                 client.CreateTable<DataClientSyncTest>();
 
                 var tmpstart = DateTime.Now;
@@ -190,7 +202,8 @@ namespace DataClientTests
 
         public float? TestValue { get; set; }
 
-       
+        public bool BoolTestValue { get; set; }
+
 
     }
 

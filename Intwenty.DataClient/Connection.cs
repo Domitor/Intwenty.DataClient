@@ -136,6 +136,10 @@ namespace Intwenty.DataClient
         {
             await InternalClient.CreateTableAsync<T>();
         }
+        public string GetCreateTableSqlStatement<T>()
+        {
+            return InternalClient.GetCreateTableSqlStatement<T>();
+        }
 
         public bool TableExists<T>()
         {
@@ -282,6 +286,10 @@ namespace Intwenty.DataClient
         {
             return await InternalClient.InsertEntityAsync(model);
         }
+        public string GetInsertSqlStatement<T>(T model)
+        {
+            return InternalClient.GetInsertSqlStatement(model);
+        }
 
         public int UpdateEntity<T>(T entity)
         {
@@ -291,7 +299,10 @@ namespace Intwenty.DataClient
         {
             return await InternalClient.UpdateEntityAsync(entity);
         }
-
+        public string GetUpdateSqlStatement<T>(T model)
+        {
+            return InternalClient.GetUpdateSqlStatement(model);
+        }
 
         public int DeleteEntity<T>(T entity)
         {

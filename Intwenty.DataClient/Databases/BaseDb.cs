@@ -648,6 +648,11 @@ namespace Intwenty.DataClient.Databases
 
         }
 
+        public virtual string GetCreateTableSqlStatement<T>()
+        {
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+            return GetSqlBuilder().GetCreateTableSql(info);
+        }
 
         public virtual bool TableExists<T>()
         {
@@ -1173,6 +1178,64 @@ namespace Intwenty.DataClient.Databases
             return res;
         }
 
+        public virtual string GetInsertSqlStatement<T>(T entity)
+        {
+            if (entity == null)
+                return "";
+
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+
+            var separator = "";
+            var query = new StringBuilder(string.Format("INSERT INTO {0} (", info.Name));
+            var values = new StringBuilder(" VALUES (");
+
+            foreach (var col in info.Columns.OrderBy(p => p.Index))
+            {
+                if (col.IsAutoIncremental)
+                    continue;
+
+                var value = col.Property.GetValue(entity);
+                var strvalue = "";
+
+                if (value == null)
+                {
+                    continue;
+                }
+                else
+                {
+                    if (col.IsString)
+                        strvalue = "'" + Convert.ToString(value) + "'";
+                    else if (col.IsDateTime)
+                        strvalue = "'" + Convert.ToDateTime(value).ToString("yyyy-MM-dd HH:mm:ss") + "'";
+                    else if (col.IsDateTimeOffset)
+                        strvalue = "'" + ((DateTimeOffset)value).DateTime.ToString("yyyy-MM-dd HH:mm:ss") + "'";
+                    else if (col.IsBoolean)
+                    {
+                        if (Convert.ToBoolean(value))
+                            strvalue = "1";
+                        else
+                            strvalue = "0";
+                    }
+                    else
+                        strvalue = Convert.ToString(value).Replace(",", ".");
+                }
+              
+                if (Database == DBMS.MariaDB || Database == DBMS.MySql)
+                    query.Append(string.Format("{0}`{1}`", separator, col.Name));
+                else
+                    query.Append(string.Format("{0}{1}", separator, col.Name));
+
+                values.Append(string.Format("{0}{1}", separator, strvalue));
+                separator = ",";
+
+            }
+            query.Append(") ");
+            values.Append(")");
+
+            return query.Append(values).ToString();
+
+        }
+
         public virtual async Task<int> InsertEntityAsync<T>(T entity)
         {
             if (entity == null)
@@ -1256,7 +1319,113 @@ namespace Intwenty.DataClient.Databases
         }
 
 
+        public virtual string GetUpdateSqlStatement<T>(T entity)
+        {
 
+            if (entity == null)
+                return "";
+
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+            var keyparameters = new List<IntwentySqlParameter>();
+            var separator = "";
+            var query = new StringBuilder(string.Format("UPDATE {0} SET ", info.Name));
+
+            foreach (var col in info.Columns)
+            {
+
+                var value = col.Property.GetValue(entity);
+
+                if (!keyparameters.Exists(p => p.Name == col.Name) && value != null && col.IsAutoIncremental)
+                    keyparameters.Add(new IntwentySqlParameter() { Name = col.Name, Value = value, DataType = DbType.Int32 });
+                else if (!keyparameters.Exists(p => p.Name == col.Name) && value != null && col.IsPrimaryKeyColumn && (col.IsString))
+                    keyparameters.Add(new IntwentySqlParameter() { Name = col.Name, Value = value, DataType= DbType.String });
+                else if (!keyparameters.Exists(p => p.Name == col.Name) && value != null && col.IsPrimaryKeyColumn && (col.IsBoolean))
+                    keyparameters.Add(new IntwentySqlParameter() { Name = col.Name, Value = value, DataType = DbType.Boolean });
+                else if (!keyparameters.Exists(p => p.Name == col.Name) && value != null && col.IsPrimaryKeyColumn && (col.IsDateTime || col.IsDateTimeOffset))
+                    keyparameters.Add(new IntwentySqlParameter() { Name = col.Name, Value = value, DataType = DbType.DateTime });
+                else if (!keyparameters.Exists(p => p.Name == col.Name) && value != null && col.IsPrimaryKeyColumn)
+                    keyparameters.Add(new IntwentySqlParameter() { Name = col.Name, Value = value, DataType = DbType.Int32 });
+
+                if (keyparameters.Exists(p => p.Name == col.Name))
+                    continue;
+
+                var strvalue = "";
+
+                if (value == null)
+                {
+                    continue;
+                }
+                else
+                {
+                    if (col.IsString)
+                        strvalue = "'" + Convert.ToString(value) + "'";
+                    else if (col.IsDateTime)
+                        strvalue = "'" + Convert.ToDateTime(value).ToString("yyyy-MM-dd HH:mm:ss") + "'";
+                    else if (col.IsDateTimeOffset)
+                        strvalue = "'" + ((DateTimeOffset)value).DateTime.ToString("yyyy-MM-dd HH:mm:ss") + "'";
+                    else if (col.IsBoolean)
+                    {
+                        if (Convert.ToBoolean(value))
+                            strvalue = "1";
+                        else
+                            strvalue = "0";
+                    }
+                    else
+                        strvalue = Convert.ToString(value).Replace(",", ".");
+                }
+
+                if (Database== DBMS.MariaDB || Database == DBMS.MySql)
+                    query.Append(separator + string.Format("`{0}`={1}", col.Name, strvalue));
+                else
+                    query.Append(separator + string.Format("`{0}`={1}", col.Name, strvalue));
+
+                separator = ", ";
+            }
+
+            if (keyparameters.Count == 0)
+                return "";
+
+
+            query.Append(" WHERE ");
+            var wheresep = "";
+            foreach (var p in keyparameters)
+            {
+                var strvalue = "";
+
+                if (p.Value == null)
+                {
+                    continue;
+                }
+                else
+                {
+                    if (p.DataType == DbType.String)
+                        strvalue = "'" + Convert.ToString(p.Value) + "'";
+                    else if (p.DataType == DbType.DateTime)
+                        strvalue = "'" + Convert.ToDateTime(p.Value).ToString("yyyy-MM-dd HH:mm:ss") + "'";
+                    else if (p.DataType == DbType.Boolean)
+                    {
+                        if (Convert.ToBoolean(p.Value))
+                            strvalue = "1";
+                        else
+                            strvalue = "0";
+                    }
+                    else
+                        strvalue = Convert.ToString(p.Value).Replace(",", ".");
+                }
+
+
+                if (Database == DBMS.MariaDB || Database == DBMS.MySql)
+                    query.Append(wheresep + string.Format("`{0}`={1}", p.Name,strvalue));
+                else
+                    query.Append(wheresep + string.Format("{0}={1}", p.Name, strvalue));
+
+                wheresep = " AND ";
+            }
+
+            return query.ToString();
+
+
+        }
 
         public virtual int DeleteEntities<T>(IEnumerable<T> entities)
         {

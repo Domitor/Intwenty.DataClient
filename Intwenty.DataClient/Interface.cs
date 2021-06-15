@@ -23,6 +23,7 @@ namespace Intwenty.DataClient
         Task RollbackTransactionAsync();
         void CreateTable<T>();
         Task CreateTableAsync<T>();
+        string GetCreateTableSqlStatement<T>();
         bool TableExists<T>();
         Task<bool> TableExistsAsync<T>();
         bool TableExists(string tablename);
@@ -61,8 +62,10 @@ namespace Intwenty.DataClient
         Task<DataTable> GetDataTableAsync(string sql, bool isprocedure = false, IIntwentySqlParameter[] parameters = null);
         int InsertEntity<T>(T entity);
         Task<int> InsertEntityAsync<T>(T entity);
+        string GetInsertSqlStatement<T>(T entity);
         int UpdateEntity<T>(T entity);
         Task<int> UpdateEntityAsync<T>(T entity);
+        string GetUpdateSqlStatement<T>(T entity);
         int DeleteEntity<T>(T entity);
         Task<int> DeleteEntityAsync<T>(T entity);
         int DeleteEntities<T>(IEnumerable<T> entities);
