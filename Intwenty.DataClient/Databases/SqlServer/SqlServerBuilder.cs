@@ -23,9 +23,12 @@ namespace Intwenty.DataClient.Databases.SqlServer
 
             var sb = new StringBuilder();
             sb.Append("CREATE TABLE " + model.Name + " (");
+            string separator = "";
             foreach (var m in model.Columns)
             {
-                sb.Append(GetCreateColumnSql(m));
+                var toappend = GetColumnDefinition(m);
+                sb.Append(string.Format("{0}{1}", separator, toappend));
+                separator = ",";
             }
 
             if (model.HasPrimaryKeyColumn)
@@ -290,7 +293,7 @@ namespace Intwenty.DataClient.Databases.SqlServer
         }
 
 
-        protected override string GetCreateColumnSql(IntwentyDbColumnDefinition model)
+        protected override string GetColumnDefinition(IntwentyDbColumnDefinition model)
         {
             var result = string.Empty;
             var allownullvalue = "NULL";
@@ -316,13 +319,11 @@ namespace Intwenty.DataClient.Databases.SqlServer
                 allownullvalue = "NOT NULL";
 
             //HANDLE RESERVED WORDS
-            if (columnname.ToUpper() == "KEY")
+            if (columnname.ToUpper() == "KEY" || columnname.ToUpper() == "VALUE" || columnname.ToUpper() == "INDEX" || columnname.ToUpper() == "ORDER")
                 columnname = string.Format("{0}{1}{2}", new[]{"[",columnname,"]"});
 
             result = string.Format("{0} {1} {2} {3}", new object[] { columnname, datatype, autoinccommand, allownullvalue });
-            if (model.Index > 0)
-                result = ", " + result;
-
+          
             if (string.IsNullOrEmpty(result))
                 throw new InvalidOperationException("Could not generate sql column definition");
 
@@ -334,6 +335,16 @@ namespace Intwenty.DataClient.Databases.SqlServer
             return sqlstatement;
         }
 
+        public override string GetAlterTableAddColumnSql(IntwentyDbTableDefinition tablemodel, IntwentyDbColumnDefinition columnmodel)
+        {
+
+            var t = columnmodel.IsNullNotAllowed;
+            columnmodel.IsNullNotAllowed = false;
+            var createcolumnsql = GetColumnDefinition(columnmodel);
+            var result = string.Format("ALTER TABLE {0} ADD {1}", tablemodel.Name, createcolumnsql);
+            columnmodel.IsNullNotAllowed = t;
+            return result;
+        }
 
     }
 }

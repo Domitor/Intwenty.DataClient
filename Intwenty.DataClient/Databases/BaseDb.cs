@@ -654,6 +654,28 @@ namespace Intwenty.DataClient.Databases
             return GetSqlBuilder().GetCreateTableSql(info);
         }
 
+        public virtual void ModifyTable<T>()
+        {
+            if (!TableExists<T>())
+            {
+                CreateTable<T>();
+                return;
+            }
+
+            var info = TypeDataHandler.GetDbTableDefinition<T>();
+           
+            foreach (var col in info.Columns)
+            {
+                if (!ColumnExists(info.Name, col.Name))
+                {
+                    var addcolstmt = GetSqlBuilder().GetAlterTableAddColumnSql(info, col);
+                    RunCommand(addcolstmt);
+                }
+
+            }
+
+        }
+
         public virtual bool TableExists<T>()
         {
             var info = TypeDataHandler.GetDbTableDefinition<T>();

@@ -23,6 +23,7 @@ namespace Intwenty.DataClient
         Task RollbackTransactionAsync();
         void CreateTable<T>();
         Task CreateTableAsync<T>();
+        void ModifyTable<T>();
         string GetCreateTableSqlStatement<T>();
         bool TableExists<T>();
         Task<bool> TableExistsAsync<T>();

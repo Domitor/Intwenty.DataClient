@@ -11,11 +11,8 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Domitor/Intwenty.DataClient</RepositoryUrl>
     <PackageIcon>intwenty_loggo_small.png</PackageIcon>
-    <Version>1.1.1</Version>
-    <PackageReleaseNotes>Feature: Get entities as sql insert/update
-- string GetInsertSqlStatement(entity)
-- string GetUpdateSqlStatement(entity)
-- string GetCreateTableSqlStatement&lt;T&gt;</PackageReleaseNotes>
+    <Version>1.1.2</Version>
+    <PackageReleaseNotes>Added feature: ModifyTable&lt;T&gt;, which creates a table if not existing or adds non existing columns to an existing table.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

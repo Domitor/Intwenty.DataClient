@@ -136,6 +136,16 @@ namespace Intwenty.DataClient
         {
             await InternalClient.CreateTableAsync<T>();
         }
+
+        /// <summary>
+        /// If the table corresponding to the type, does not exists it will be created with the columns in the model.
+        /// If the table corresponding to the type, already exists all columns that not already exists will be added.
+        /// </summary>
+        public void ModifyTable<T>()
+        {
+            InternalClient.ModifyTable<T>();
+        }
+
         public string GetCreateTableSqlStatement<T>()
         {
             return InternalClient.GetCreateTableSqlStatement<T>();

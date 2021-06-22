@@ -22,9 +22,12 @@ namespace Intwenty.DataClient.Databases.Postgres
 
             var sb = new StringBuilder();
             sb.Append("CREATE TABLE " + model.Name + " (");
+            string separator = "";
             foreach (var m in model.Columns)
             {
-                sb.Append(GetCreateColumnSql(m));
+                var toappend = GetColumnDefinition(m);
+                sb.Append(string.Format("{0}{1}", separator, toappend));
+                separator = ",";
             }
 
             if (model.HasPrimaryKeyColumn)
@@ -270,7 +273,7 @@ namespace Intwenty.DataClient.Databases.Postgres
         }
 
 
-        protected override string GetCreateColumnSql(IntwentyDbColumnDefinition model)
+        protected override string GetColumnDefinition(IntwentyDbColumnDefinition model)
         {
             var result = string.Empty;
             var allownullvalue = "NULL";
@@ -295,8 +298,7 @@ namespace Intwenty.DataClient.Databases.Postgres
                 allownullvalue = "NOT NULL";
 
             result = string.Format("{0} {1} {2}", new object[] { model.Name, datatype, allownullvalue });
-            if (model.Index > 0)
-                result = ", " + result;
+           
 
             if (string.IsNullOrEmpty(result))
                 throw new InvalidOperationException("Could not generate sql column definition");
@@ -388,6 +390,17 @@ namespace Intwenty.DataClient.Databases.Postgres
 
             return sqlstatement;
 
+        }
+
+        public override string GetAlterTableAddColumnSql(IntwentyDbTableDefinition tablemodel, IntwentyDbColumnDefinition columnmodel)
+        {
+
+            var t = columnmodel.IsNullNotAllowed;
+            columnmodel.IsNullNotAllowed = false;
+            var createcolumnsql = GetColumnDefinition(columnmodel);
+            var result = string.Format("ALTER TABLE {0} ADD {1}", tablemodel.Name, createcolumnsql);
+            columnmodel.IsNullNotAllowed = t;
+            return result;
         }
 
     }

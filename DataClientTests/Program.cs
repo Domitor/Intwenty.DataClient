@@ -27,12 +27,12 @@ namespace DataClientTests
         private static void RunSynchTest()
         {
             var start = DateTime.Now;
-            var client = new Connection(DBMS.MariaDB, @"Server=127.0.0.1;Database=IntwentyDb;uid=root;Password=xxxxx");
+            var client = new Connection(DBMS.MariaDB, @"Server=127.0.0.1;Database=IntwentyDb;uid=root;Password=xxxxxxxx");
             client.Open();
 
             try
             {
-
+              
                 if (client.TableExists("DataClient_SyncTestTable"))
                     client.RunCommand("DROP TABLE DataClient_SyncTestTable");
 
@@ -114,7 +114,7 @@ namespace DataClientTests
 
             try
             {
-
+              
                 if (await client.TableExistsAsync("DataClient_AsyncTestTable"))
                     await client.RunCommandAsync("DROP TABLE DataClient_AsyncTestTable");
 
@@ -208,7 +208,7 @@ namespace DataClientTests
     }
 
     [DbTablePrimaryKey("Id")]
-    [DbTableName("DataClient_AsyncTestTable")]
+    [DbTableName("DataClient_Async_TestTable")]
     public class DataClientAsyncTest
     {
         [AutoIncrement]
@@ -227,6 +227,16 @@ namespace DataClientTests
         public DateTimeOffset? DtOffset { get; set; }
 
         public float? TestValue { get; set; }
+
+        public int NewTestIntField { get; set; }
+
+        public string NewTestStringField { get; set; }
+
+        public bool NewBooleanField { get; set; }
+
+        public int NewTestIntField2 { get; set; }
+
+        public string NewTestStringField2 { get; set; }
 
 
 

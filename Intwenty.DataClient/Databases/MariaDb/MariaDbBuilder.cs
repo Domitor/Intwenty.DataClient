@@ -22,9 +22,12 @@ namespace Intwenty.DataClient.Databases.MariaDb
 
             var sb = new StringBuilder();
             sb.Append("CREATE TABLE " + model.Name + " (");
+            string separator = "";
             foreach (var m in model.Columns)
             {
-                sb.Append(GetCreateColumnSql(m));
+                var toappend = GetColumnDefinition(m);
+                sb.Append(string.Format("{0}{1}", separator, toappend));
+                separator = ",";
             }
 
             if (model.HasPrimaryKeyColumn)
@@ -281,7 +284,7 @@ namespace Intwenty.DataClient.Databases.MariaDb
         }
 
 
-        protected override string GetCreateColumnSql(IntwentyDbColumnDefinition model)
+        protected override string GetColumnDefinition(IntwentyDbColumnDefinition model)
         {
             var result = string.Empty;
             var allownullvalue = "NULL";
@@ -310,9 +313,7 @@ namespace Intwenty.DataClient.Databases.MariaDb
                 allownullvalue = "NOT NULL";
             }
 
-            result = string.Format("`{0}` {1} {2} {3} {4}", new object[] { model.Name, datatype, allownullvalue, autoinccommand, defaultvalue });
-            if (model.Index > 0)
-                result = ", " + result;
+            result = string.Format("`{0}` {1} {2} {3} {4}", new object[] { model.Name, datatype, allownullvalue, autoinccommand, defaultvalue });         
 
             if (string.IsNullOrEmpty(result))
                 throw new InvalidOperationException("Could not generate sql column definition");
@@ -325,5 +326,15 @@ namespace Intwenty.DataClient.Databases.MariaDb
             return sqlstatement;
         }
 
+        public override string GetAlterTableAddColumnSql(IntwentyDbTableDefinition tablemodel, IntwentyDbColumnDefinition columnmodel)
+        {
+
+            var t = columnmodel.IsNullNotAllowed;
+            columnmodel.IsNullNotAllowed = false;
+            var createcolumnsql = GetColumnDefinition(columnmodel);
+            var result = string.Format("ALTER TABLE `{0}` ADD {1}", tablemodel.Name, createcolumnsql);
+            columnmodel.IsNullNotAllowed = t;
+            return result;
+        }
     }
 }

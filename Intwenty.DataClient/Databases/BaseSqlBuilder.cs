@@ -14,6 +14,8 @@ namespace Intwenty.DataClient.Databases
 
         public abstract string GetCreateTableSql(IntwentyDbTableDefinition model);
 
+        public abstract string GetAlterTableAddColumnSql(IntwentyDbTableDefinition tablemodel, IntwentyDbColumnDefinition columnmodel);
+
         public abstract string GetCreateIndexSql(IntwentyDbIndexDefinition model);
 
         public abstract string GetInsertSql<T>(IntwentyDbTableDefinition model, T instance, List<IntwentySqlParameter> parameters);
@@ -24,7 +26,7 @@ namespace Intwenty.DataClient.Databases
 
         public abstract string GetModifiedSelectStatement(string sqlstatement);
 
-        protected abstract string GetCreateColumnSql(IntwentyDbColumnDefinition model);
+        protected abstract string GetColumnDefinition(IntwentyDbColumnDefinition model);
 
       
 
